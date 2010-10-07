@@ -4,16 +4,12 @@
 	<parent>
 		<groupId>org.mobicents</groupId>
 		<artifactId>mobicents-parent</artifactId>
-		<version>2.12-SNAPSHOT</version>
+		<version>2.12</version>
 	</parent>
 
 	<groupId>org.mobicents.javax.sip</groupId>
 	<artifactId>mobicents-jain-sip-ext</artifactId>
 	<version>1.0-SNAPSHOT</version>
-
-	<properties>
-		<mobicents.tools.mavenplugin.eclipse.version>1.0.0.BETA2</mobicents.tools.mavenplugin.eclipse.version>
-	</properties>
 
 	<dependencies>
 		<dependency>
@@ -33,18 +29,44 @@
 			<plugin>
 				<artifactId>maven-eclipse-plugin</artifactId>
 				<groupId>org.mobicents.tools</groupId>
-				<version>${mobicents.tools.mavenplugin.eclipse.version}</version>
 				<inherited>true</inherited>
 				<executions />
 				<configuration>
 					<excludePoms />
 					<resolveTransitiveDependencies>true</resolveTransitiveDependencies>
-					<eclipseProjectName>jain-sip-ha-core</eclipseProjectName>
+					<eclipseProjectName>mobicents-jain-sip-ext</eclipseProjectName>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 
+	<scm>
+		<connection>scm:svn:https://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</connection>
+		<developerConnection>scm:svn:https://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</developerConnection>
+		<url>http://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</url>
+	</scm>
+	
+	<profiles>
+		<profile>
+			<id>maven-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-release-plugin</artifactId>
+						<configuration>
+							<autoVersionSubmodules>true</autoVersionSubmodules>
+							<tagBase>https://mobicents.googlecode.com/svn/tags/servers/jain-sip-ext</tagBase>
+							<branchBase>https://mobicents.googlecode.com/svn/branches/servers/jain-sip-ext</branchBase>
+							<preparationGoals>clean install</preparationGoals>
+							<arguments>-Dmaven.test.skip</arguments>						
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>	
+	
 	<!--
 		dupe info from parent, but it's only way to retrieve the parent
 		without checkout
