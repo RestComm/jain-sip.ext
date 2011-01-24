@@ -4,7 +4,6 @@ import gov.nist.javax.sip.stack.HopImpl;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -21,13 +20,11 @@ import javax.sip.address.URI;
 
 import org.apache.log4j.Logger;
 import org.mobicents.ext.javax.sip.utils.Inet6Util;
-import org.xbill.DNS.AAAARecord;
-import org.xbill.DNS.ARecord;
-import org.xbill.DNS.Lookup;
 import org.xbill.DNS.NAPTRRecord;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.TextParseException;
-import org.xbill.DNS.Type;
 
 /**
  * The Address resolver to resolve proxy domain to a hop to the outbound proxy server 
@@ -45,13 +42,14 @@ public class DNSServerLocator {
 	
 	protected Set<String> supportedTransports;
 	protected Set<String> localHostNames;
-	protected DNSLookupPerformer dnsLookupPerformer;
+	private DNSLookupPerformer dnsLookupPerformer;
 	
 	/**
 	 */
 	public DNSServerLocator(Set<String> supportedTransports) {
 		this.supportedTransports = new CopyOnWriteArraySet<String>(supportedTransports);
 		localHostNames = new CopyOnWriteArraySet<String>();
+		dnsLookupPerformer = new DNSLookupPerformer();
 	}
 
 	/**
@@ -139,9 +137,9 @@ public class DNSServerLocator {
 		final String host = sipURI.getHost();
 		final int port = sipURI.getPort();				
 		String transport = sipURI.getTransportParam();
-
+		
 		NAPTRRecord naptrRecordOfTransportLookup = null;
-		SRVRecord[] srvRecordsOfTransportLookup = null;
+		List<Record> srvRecordsOfTransportLookup = null;
 		// Determine the transport to be used for a given SIP URI as defined by 
 		// RFC 3263 Section 4.1 Selecting a Transport Protocol
 		if(transport == null) {
@@ -154,9 +152,9 @@ public class DNSServerLocator {
 				// Otherwise, if no transport protocol or port is specified, and the
 				// target is not a numeric IP address, the client SHOULD perform a NAPTR
 				// query for the domain in the URI.
-				List<NAPTRRecord> naptrRecords = DNSLookupPerformer.performNAPTRLookup(host, sipURI.isSecure(), supportedTransports);
+				List<NAPTRRecord> naptrRecords = dnsLookupPerformer.performNAPTRLookup(host, sipURI.isSecure(), supportedTransports);
 				
-				if(naptrRecords.size() == 0) {
+				if(naptrRecords == null || naptrRecords.size() == 0) {
 					// If no NAPTR records are found, the client constructs SRV queries for
 					// those transport protocols it supports, and does a query for each.
 					// Queries are done using the service identifier "_sip" for SIP URIs and
@@ -165,22 +163,22 @@ public class DNSServerLocator {
 					while (supportedTransportIterator.hasNext() && transport == null) {
 						 String supportedTransport = supportedTransportIterator
 								.next();
+						String serviceIdentifier = "_sip._";
+						if (sipURI.isSecure()) {
+							serviceIdentifier = "_sips._";
+						}
 						try {
-							String serviceIdentifier = "_sip._";
-							if (sipURI.isSecure()) {
-								serviceIdentifier = "_sips._";
-							}
-							srvRecordsOfTransportLookup = (SRVRecord[]) new Lookup(serviceIdentifier
-									+ supportedTransport.toLowerCase() + "." + host, Type.SRV).run();
-							if (srvRecordsOfTransportLookup != null && srvRecordsOfTransportLookup.length > 0) {
-								// A particular transport is supported if the query is successful.  
-								// The client MAY use any transport protocol it 
-								// desires which is supported by the server => we use the first one
-								transport = supportedTransport;
-							}
+							srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(new Name(serviceIdentifier
+									+ supportedTransport.toLowerCase() + "." + host));
 						} catch (TextParseException e) {
 							logger.error("Impossible to parse the parameters for dns lookup",e);
 						}						
+						if (srvRecordsOfTransportLookup.size() > 0) {
+							// A particular transport is supported if the query is successful.  
+							// The client MAY use any transport protocol it 
+							// desires which is supported by the server => we use the first one
+							transport = supportedTransport;
+						}
 					}
 					// If no SRV records are found, the client SHOULD use TCP for a SIPS
 					// URI, and UDP for a SIP URI
@@ -215,42 +213,41 @@ public class DNSServerLocator {
 			// an attempt should fail, based on the definition of failure in Section
 			// 4.3, the next SHOULD be tried, and if that should fail, the next
 			// SHOULD be tried, and so on.
-			return locateHopsForNonNumericAddressWithPort(host, port, transport);
+			return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);
 		} else {			
 			if(naptrRecordOfTransportLookup != null) {
 				// If the TARGET was not a numeric IP address, and no port was present
 				// in the URI, the client performs an SRV query on the record returned
 				// from the NAPTR processing of Section 4.1, if such processing was
 				// performed.
-				SRVRecord[] srvRecords = (SRVRecord[]) new Lookup(naptrRecordOfTransportLookup.getReplacement(), Type.SRV).run();
-				if (srvRecords != null && srvRecords.length > 0) {
+				List<Record> srvRecords = dnsLookupPerformer.performSRVLookup(naptrRecordOfTransportLookup.getReplacement());
+				if (srvRecords.size() > 0) {
 					return sortSRVRecords(host, transport, srvRecords);
 				} else {
 					// If no SRV records were found, the client performs an A or AAAA record
 					// lookup of the domain name.
-					return locateHopsForNonNumericAddressWithPort(host, port, transport);
+					return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);
 				}
-			} else if(srvRecordsOfTransportLookup == null || srvRecordsOfTransportLookup.length == 0){
+			} else if(srvRecordsOfTransportLookup.size() == 0){
 				// If it was not, because a transport was specified
 				// explicitly, the client performs an SRV query for that specific
 				// transport, using the service identifier "_sips" for SIPS URIs.  For a
 				// SIP URI, if the client wishes to use TLS, it also uses the service
 				// identifier "_sips" for that specific transport, otherwise, it uses "_sip"
-				SRVRecord[] srvRecords = null;
-				try {
-					String serviceIdentifier = "_sip._";
-					if (sipURI.isSecure() || transport.equalsIgnoreCase(ListeningPoint.TLS)) {
-						serviceIdentifier = "_sips._";
-					}
-					srvRecords = (SRVRecord[]) new Lookup(serviceIdentifier + transport + "." + host, Type.SRV).run();
-				} catch (TextParseException e) {
-					logger.error("Impossible to parse the parameters for dns lookup", e);
+				String serviceIdentifier = "_sip._";
+				if (sipURI.isSecure() || transport.equalsIgnoreCase(ListeningPoint.TLS)) {
+					serviceIdentifier = "_sips._";
 				}
-		
-				if (srvRecords == null || srvRecords.length == 0) {
+				List<Record> srvRecords = null;
+				try {
+					srvRecords = dnsLookupPerformer.performSRVLookup(new Name(serviceIdentifier + transport + "." + host));
+				} catch (TextParseException e) {
+					logger.error("Impossible to parse the parameters for dns lookup",e);
+				}	
+				if (srvRecords == null || srvRecords.size() == 0) {
 					// If no SRV records were found, the client performs an A or AAAA record
 					// lookup of the domain name.
-					return locateHopsForNonNumericAddressWithPort(host, port, transport);
+					return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);
 				} else {
 					return sortSRVRecords(host, transport, srvRecords);
 				}
@@ -270,31 +267,29 @@ public class DNSServerLocator {
 	 * @param srvRecords
 	 * @return
 	 */
-	private Queue<Hop> sortSRVRecords(final String host, String transport, SRVRecord[] srvRecords) {
+	private Queue<Hop> sortSRVRecords(final String host, String transport, List<Record> srvRecords) {
 		Queue<Hop> priorityQueue = new LinkedList<Hop>();
-		if(srvRecords != null && srvRecords.length > 0) {
-			List<SRVRecord> sortedSrvs = Arrays.asList(srvRecords);					
-			Collections.sort(sortedSrvs, new SRVRecordComparator());
-			
-			for (SRVRecord srvRecord : sortedSrvs) {
-				int recordPort = srvRecord.getPort();						
-				String resolvedName = srvRecord.getTarget().toString();
-				try {
-					String hostAddress= InetAddress.getByName(resolvedName).getHostAddress();
-					if(logger.isDebugEnabled()) {
-						logger.debug("Did a successful DNS SRV lookup for host:transport " +
-								""+ host + "/" + transport +
-								" , Host Name = " + resolvedName +
-								" , Host IP Address = " + hostAddress + 
-								", Host Port = " + recordPort);
-					}				
-					priorityQueue.add(new HopImpl(hostAddress, recordPort, transport));
-				} catch (UnknownHostException e) {
-					logger.error("Impossible to get the host address of the resolved name, " +
-							"we are going to just use the domain name directly" + resolvedName, e);
-				}
-			}		
-		}
+		Collections.sort(srvRecords, new SRVRecordComparator());
+		
+		for (Record record : srvRecords) {
+			SRVRecord srvRecord = (SRVRecord) record;
+			int recordPort = srvRecord.getPort();						
+			String resolvedName = srvRecord.getTarget().toString();
+			try {
+				String hostAddress= InetAddress.getByName(resolvedName).getHostAddress();
+				if(logger.isDebugEnabled()) {
+					logger.debug("Did a successful DNS SRV lookup for host:transport " +
+							""+ host + "/" + transport +
+							" , Host Name = " + resolvedName +
+							" , Host IP Address = " + hostAddress + 
+							", Host Port = " + recordPort);
+				}				
+				priorityQueue.add(new HopImpl(hostAddress, recordPort, transport));
+			} catch (UnknownHostException e) {
+				logger.error("Impossible to get the host address of the resolved name, " +
+						"we are going to just use the domain name directly" + resolvedName, e);
+			}
+		}		
 		
 		return priorityQueue;
 	}
@@ -303,7 +298,7 @@ public class DNSServerLocator {
 	 * @param sipURI
 	 * @return
 	 */
-	private static String getDefaultTransportForSipUri(SipURI sipURI) {
+	public String getDefaultTransportForSipUri(SipURI sipURI) {
 		String transport;
 		if(sipURI.isSecure()) {
 			transport = ListeningPoint.TCP;
@@ -313,30 +308,6 @@ public class DNSServerLocator {
 		return transport;
 	}
 	
-	/**
-	 * 
-	 * @param host
-	 * @param port
-	 * @param transport
-	 * @return
-	 */
-	private Queue<Hop> locateHopsForNonNumericAddressWithPort(String host, int port, String transport) {
-		Queue<Hop> priorityQueue = new LinkedList<Hop>();
-		
-		final ARecord[] aRecords = DNSLookupPerformer.performALookup(host);
-		if(aRecords != null) {
-			for(ARecord aRecord : aRecords) {
-				priorityQueue.add(new HopImpl(aRecord.getAddress().getHostAddress(), port, transport));
-			}
-		}		
-		final AAAARecord[] aaaaRecords = DNSLookupPerformer.performAAAALookup(host);
-		if(aaaaRecords != null) {
-			for(AAAARecord aaaaRecord : aaaaRecords) {
-				priorityQueue.add(new HopImpl(aaaaRecord.getAddress().getHostAddress(), port, transport));
-			}
-		}
-		return priorityQueue;
-	}
 	
 	public void addLocalHostName(String localHostName) {
 		localHostNames.add(localHostName);
@@ -352,5 +323,19 @@ public class DNSServerLocator {
 	
 	public void removeSupportedTransport(String supportedTransport) {
 		supportedTransports.add(supportedTransport);
+	}
+
+	/**
+	 * @param dnsLookupPerformer the dnsLookupPerformer to set
+	 */
+	public void setDnsLookupPerformer(DNSLookupPerformer dnsLookupPerformer) {
+		this.dnsLookupPerformer = dnsLookupPerformer;
+	}
+
+	/**
+	 * @return the dnsLookupPerformer
+	 */
+	public DNSLookupPerformer getDnsLookupPerformer() {
+		return dnsLookupPerformer;
 	}
 }

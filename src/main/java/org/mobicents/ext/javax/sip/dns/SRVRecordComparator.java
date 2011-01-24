@@ -23,17 +23,20 @@ package org.mobicents.ext.javax.sip.dns;
 
 import java.util.Comparator;
 
+import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
 
 /**
  * @author jean.deruelle@gmail.com
  *
  */
-public class SRVRecordComparator implements Comparator<SRVRecord> {
+public class SRVRecordComparator implements Comparator<Record> {
 
-	public int compare(SRVRecord o1, SRVRecord o2) {
-		int o1Priority = o1.getPriority();
-		int o2Priority = o2.getPriority();
+	public int compare(Record o1, Record o2) {
+		SRVRecord o1SRVRecord = (SRVRecord) o1;
+		SRVRecord o2SRVRecord = (SRVRecord) o2;
+		int o1Priority = o1SRVRecord.getPriority();
+		int o2Priority = o2SRVRecord.getPriority();
 		// the lower priority is the best
 		if(o1Priority < o2Priority)
 			return 1;
@@ -41,15 +44,15 @@ public class SRVRecordComparator implements Comparator<SRVRecord> {
 			return -1;
 		
 		// if they are the same sort them through weight
-		int o1Weight = o1.getWeight();
-		int o2Weight = o2.getWeight();
+		int o1Weight = o1SRVRecord.getWeight();
+		int o2Weight = o2SRVRecord.getWeight();
 		// the higher weight is the best
 		if(o1Weight > o2Weight)
 			return 1;
 		if(o1Weight < o2Weight)
 			return -1;
 		// RFC 3263 Section 4.4
-		return o1.getTarget().compareTo(o2.getTarget());
+		return o1SRVRecord.getTarget().compareTo(o2SRVRecord.getTarget());
 	}
 
 }

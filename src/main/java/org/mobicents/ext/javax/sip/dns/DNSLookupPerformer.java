@@ -21,17 +21,24 @@
  */
 package org.mobicents.ext.javax.sip.dns;
 
+import gov.nist.javax.sip.stack.HopImpl;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.sip.ListeningPoint;
+import javax.sip.address.Hop;
 
 import org.apache.log4j.Logger;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.NAPTRRecord;
+import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
@@ -48,29 +55,39 @@ public class DNSLookupPerformer {
 	public static final String SERVICE_D2T = "D2T";
 	
 	
-	public static List<NAPTRRecord> performNAPTRLookup(String domain, boolean isSecure, Set<String> supportedTransports) {
+	public List<Record> performSRVLookup(Name replacement) {
+		Record[] srvRecords = (Record[]) new Lookup(replacement, Type.SRV).run();
+		if(srvRecords != null && srvRecords.length > 0) {
+			return Arrays.asList(srvRecords);	
+		}
+		return new ArrayList<Record>(0);
+	}
+	
+	public List<NAPTRRecord> performNAPTRLookup(String domain, boolean isSecure, Set<String> supportedTransports) {
 		List<NAPTRRecord> records = new ArrayList<NAPTRRecord>();
 		
 		try {
 			Record[] naptrRecords = new Lookup(domain, Type.NAPTR).run();
-			for (NAPTRRecord record : (NAPTRRecord[]) naptrRecords) {
-				if(isSecure) {
-					// First, a client resolving a SIPS URI MUST discard any services that
-					// do not contain "SIPS" as the protocol in the service field.
-					if(record.getService().startsWith(SERVICE_SIPS)) {
-						records.add(record);
-					}
-				} else {	
-					// The converse is not true, however.
-					if(!record.getService().startsWith(SERVICE_SIPS) || 
-							(record.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
-						//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
-						if((record.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
-								record.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
-							// Second, a client MUST discard any service fields that identify
-							// a resolution service whose value is not "D2X", for values of X that
-							// indicate transport protocols supported by the client.
+			if(naptrRecords != null) {
+				for (NAPTRRecord record : (NAPTRRecord[]) naptrRecords) {
+					if(isSecure) {
+						// First, a client resolving a SIPS URI MUST discard any services that
+						// do not contain "SIPS" as the protocol in the service field.
+						if(record.getService().startsWith(SERVICE_SIPS)) {
 							records.add(record);
+						}
+					} else {	
+						// The converse is not true, however.
+						if(!record.getService().startsWith(SERVICE_SIPS) || 
+								(record.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
+							//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
+							if((record.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
+									record.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
+								// Second, a client MUST discard any service fields that identify
+								// a resolution service whose value is not "D2X", for values of X that
+								// indicate transport protocols supported by the client.
+								records.add(record);
+							}
 						}
 					}
 				}
@@ -87,20 +104,33 @@ public class DNSLookupPerformer {
 	/**
 	 * 
 	 * @param host
+	 * @param port
+	 * @param transport
 	 * @return
 	 */
-	public static ARecord[] performALookup(String host) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * 
-	 * @param host
-	 * @return
-	 */
-	public static AAAARecord[] performAAAALookup(String host) {
-		// TODO Auto-generated method stub
-		return null;
+	public Queue<Hop> locateHopsForNonNumericAddressWithPort(String host, int port, String transport) {
+		Queue<Hop> priorityQueue = new LinkedList<Hop>();
+		
+		try {
+			Record[] aRecords = new Lookup(host, Type.A).run();
+			if(aRecords != null && aRecords.length > 0) {
+				for(ARecord aRecord : (ARecord[]) aRecords) {
+					priorityQueue.add(new HopImpl(aRecord.getAddress().getHostAddress(), port, transport));
+				}
+			}	
+		} catch (TextParseException e) {
+			logger.warn("Couldn't parse domain " + host, e);
+		}	
+		try {
+			final Record[] aaaaRecords = new Lookup(host, Type.AAAA).run();
+			if(aaaaRecords != null && aaaaRecords.length > 0) {
+				for(AAAARecord aaaaRecord : (AAAARecord[]) aaaaRecords) {
+					priorityQueue.add(new HopImpl(aaaaRecord.getAddress().getHostAddress(), port, transport));
+				}
+			}			
+		} catch (TextParseException e) {
+			logger.warn("Couldn't parse domain " + host, e);
+		}	
+		return priorityQueue;
 	}
 }
