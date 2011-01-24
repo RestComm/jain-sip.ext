@@ -56,7 +56,7 @@ public class DNSLookupPerformer {
 	
 	
 	public List<Record> performSRVLookup(Name replacement) {
-		Record[] srvRecords = (Record[]) new Lookup(replacement, Type.SRV).run();
+		Record[] srvRecords = new Lookup(replacement, Type.SRV).run();
 		if(srvRecords != null && srvRecords.length > 0) {
 			return Arrays.asList(srvRecords);	
 		}
@@ -69,24 +69,25 @@ public class DNSLookupPerformer {
 		try {
 			Record[] naptrRecords = new Lookup(domain, Type.NAPTR).run();
 			if(naptrRecords != null) {
-				for (NAPTRRecord record : (NAPTRRecord[]) naptrRecords) {
+				for (Record record : naptrRecords) {
+					NAPTRRecord naptrRecord = (NAPTRRecord) record;
 					if(isSecure) {
 						// First, a client resolving a SIPS URI MUST discard any services that
 						// do not contain "SIPS" as the protocol in the service field.
-						if(record.getService().startsWith(SERVICE_SIPS)) {
-							records.add(record);
+						if(naptrRecord.getService().startsWith(SERVICE_SIPS)) {
+							records.add(naptrRecord);
 						}
 					} else {	
 						// The converse is not true, however.
-						if(!record.getService().startsWith(SERVICE_SIPS) || 
-								(record.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
+						if(!naptrRecord.getService().startsWith(SERVICE_SIPS) || 
+								(naptrRecord.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
 							//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
-							if((record.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
-									record.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
+							if((naptrRecord.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
+									naptrRecord.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
 								// Second, a client MUST discard any service fields that identify
 								// a resolution service whose value is not "D2X", for values of X that
 								// indicate transport protocols supported by the client.
-								records.add(record);
+								records.add(naptrRecord);
 							}
 						}
 					}

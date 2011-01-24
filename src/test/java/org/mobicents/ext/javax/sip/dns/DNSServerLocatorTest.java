@@ -21,7 +21,7 @@
  */
 package org.mobicents.ext.javax.sip.dns;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import gov.nist.javax.sip.address.AddressFactoryImpl;
 import gov.nist.javax.sip.stack.HopImpl;
 
@@ -36,8 +36,6 @@ import javax.sip.ListeningPoint;
 import javax.sip.address.AddressFactory;
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
-
-import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
@@ -102,8 +100,8 @@ public class DNSServerLocatorTest {
 	@Test
 	public void testRealExample() throws ParseException {
 		Queue<Hop> hops = dnsServerLocator.locateHops(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertTrue(hops.size() > 0);
+		assertNotNull(hops);
+		assertTrue(hops.size() > 0);
 	}
 	
 	@Test
@@ -120,12 +118,12 @@ public class DNSServerLocatorTest {
 		sipURI.setTransportParam(transport);
 		sipURI.setPort(port);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertEquals(1, hops.size());
+		assertNotNull(hops);
+		assertEquals(1, hops.size());
 		Hop hop = hops.poll();
-		Assert.assertEquals(port, hop.getPort());
-		Assert.assertEquals(transport, hop.getTransport());
-		Assert.assertEquals(LOCALHOST, hop.getHost());
+		assertEquals(port, hop.getPort());
+		assertEquals(transport, hop.getTransport());
+		assertEquals(LOCALHOST, hop.getHost());
 	}
 	
 	@Test
@@ -141,8 +139,8 @@ public class DNSServerLocatorTest {
 		sipURI.setTransportParam(transport);
 		sipURI.setPort(port);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertEquals(0, hops.size());
+		assertNotNull(hops);
+		assertEquals(0, hops.size());
 	}
 	
 	@Test
@@ -161,30 +159,33 @@ public class DNSServerLocatorTest {
 		
 		sipURI.setTransportParam(transport);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertTrue(hops.size() > 0);
+		assertNotNull(hops);
+		assertTrue(hops.size() > 0);
 		Hop hop = hops.poll();
-		Assert.assertEquals(5060, hop.getPort());
-		Assert.assertEquals(transport, hop.getTransport());
-		Assert.assertEquals(LOCALHOST, hop.getHost());
+		assertEquals(5060, hop.getPort());
+		assertEquals(transport.toLowerCase(), hop.getTransport());
+		assertEquals(LOCALHOST, hop.getHost());
 	}
 	
 	@Test
 	public void testResolveHostNoPortButTransportSpecifiedNoSRVFound() throws ParseException, TextParseException {
 		String transport = ListeningPoint.UDP;
+		sipURI.setHost("localhost");
 		
 		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
-		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, -1, transport.toLowerCase())).thenCallRealMethod();
+		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
+		mockedHops.add(new HopImpl(LOCALHOST, 5060, transport));
+		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", -1, transport.toLowerCase())).thenReturn(mockedHops);
 		
 		sipURI.setTransportParam(transport);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertTrue(hops.size() > 0);
+		assertNotNull(hops);
+		assertTrue(hops.size() > 0);
 		Hop hop = hops.poll();
-		Assert.assertEquals(-1, hop.getPort());
-		Assert.assertEquals(transport, hop.getTransport());
-		Assert.assertEquals(LOCALHOST, hop.getHost());
+		assertEquals(5060, hop.getPort());
+		assertEquals(transport, hop.getTransport());
+		assertEquals(LOCALHOST, hop.getHost());
 	}
 	
 	@Test
@@ -206,12 +207,12 @@ public class DNSServerLocatorTest {
 		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + transport.toLowerCase() + "." + host + "."))).thenReturn(mockedSRVRecords);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertTrue(hops.size() > 0);
+		assertNotNull(hops);
+		assertTrue(hops.size() > 0);
 		Hop hop = hops.poll();
-		Assert.assertEquals(5060, hop.getPort());
-		Assert.assertEquals(transport, hop.getTransport());
-		Assert.assertEquals(LOCALHOST, hop.getHost());
+		assertEquals(5060, hop.getPort());
+		assertEquals(transport.toLowerCase(), hop.getTransport());
+		assertEquals(LOCALHOST, hop.getHost());
 	}
 
 	@Test
@@ -233,11 +234,11 @@ public class DNSServerLocatorTest {
 		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + "tcp" + "." + host))).thenReturn(mockedSRVRecordsTCP);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
-		Assert.assertNotNull(hops);
-		Assert.assertTrue(hops.size() > 0);
+		assertNotNull(hops);
+		assertTrue(hops.size() > 0);
 		Hop hop = hops.poll();
-		Assert.assertEquals(5060, hop.getPort());
-		Assert.assertEquals(transport, hop.getTransport());
-		Assert.assertEquals(LOCALHOST, hop.getHost());
+		assertEquals(5060, hop.getPort());
+		assertEquals(transport.toLowerCase(), hop.getTransport());
+		assertEquals(LOCALHOST, hop.getHost());
 	}
 }
