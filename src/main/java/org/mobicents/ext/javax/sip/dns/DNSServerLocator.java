@@ -133,7 +133,9 @@ public class DNSServerLocator {
 	 * @return 
 	 */
 	public Queue<Hop> resolveHostByDnsSrvLookup(SipURI sipURI) {		
-		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Resolving Hops for SipURI " + sipURI);
+		}
 		final String host = sipURI.getHost();
 		final int port = sipURI.getPort();				
 		String transport = sipURI.getTransportParam();
@@ -143,10 +145,16 @@ public class DNSServerLocator {
 		// Determine the transport to be used for a given SIP URI as defined by 
 		// RFC 3263 Section 4.1 Selecting a Transport Protocol
 		if(transport == null) {
+			if(logger.isDebugEnabled()) {
+				logger.debug("transport not specified, trying to resolve it for " + sipURI);
+			}
 			// Similarly, if no transport protocol is specified,
 			// and the TARGET is not numeric, but an explicit port is provided, the
 			// client SHOULD use UDP for a SIP URI, and TCP for a SIPS URI
 			if(port != -1) {
+				if(logger.isDebugEnabled()) {
+					logger.debug("port not specified, trying to resolve it for " + sipURI);
+				}
 				transport = getDefaultTransportForSipUri(sipURI);
 			} else {
 				// Otherwise, if no transport protocol or port is specified, and the
@@ -155,6 +163,9 @@ public class DNSServerLocator {
 				List<NAPTRRecord> naptrRecords = dnsLookupPerformer.performNAPTRLookup(host, sipURI.isSecure(), supportedTransports);
 				
 				if(naptrRecords == null || naptrRecords.size() == 0) {
+					if(logger.isDebugEnabled()) {
+						logger.debug("no NPATR records found, doing SRV queries for supported transports for " + sipURI);
+					}
 					// If no NAPTR records are found, the client constructs SRV queries for
 					// those transport protocols it supports, and does a query for each.
 					// Queries are done using the service identifier "_sip" for SIP URIs and
@@ -167,6 +178,10 @@ public class DNSServerLocator {
 						if (sipURI.isSecure()) {
 							serviceIdentifier = "_sips._";
 						}
+						if(logger.isDebugEnabled()) {
+							logger.debug("no NPATR records found, doing SRV query for supported transport " + serviceIdentifier
+									+ supportedTransport.toLowerCase() + "." + host + " for " + sipURI);
+						}
 						try {
 							srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(new Name(serviceIdentifier
 									+ supportedTransport.toLowerCase() + "." + host));
@@ -174,17 +189,29 @@ public class DNSServerLocator {
 							logger.error("Impossible to parse the parameters for dns lookup",e);
 						}						
 						if (srvRecordsOfTransportLookup.size() > 0) {
+							if(logger.isDebugEnabled()) {
+								logger.debug("no NPATR records found, SRV query for supported transport " + serviceIdentifier
+										+ supportedTransport.toLowerCase() + "." + host + " successful for " + sipURI);
+							}
 							// A particular transport is supported if the query is successful.  
 							// The client MAY use any transport protocol it 
 							// desires which is supported by the server => we use the first one
 							transport = supportedTransport;
 						}
 					}
-					// If no SRV records are found, the client SHOULD use TCP for a SIPS
-					// URI, and UDP for a SIP URI
-					transport = getDefaultTransportForSipUri(sipURI);
+					if(transport == null) {
+						if(logger.isDebugEnabled()) {
+							logger.debug("no SRV records found for finding transport for " + sipURI);
+						}
+						// If no SRV records are found, the client SHOULD use TCP for a SIPS
+						// URI, and UDP for a SIP URI
+						transport = getDefaultTransportForSipUri(sipURI);
+					}
 				} else {
 					naptrRecordOfTransportLookup = naptrRecords.get(0);
+					if(logger.isDebugEnabled()) {
+						logger.debug("naptr records found for finding transport for " + sipURI);
+					}
 					String service = naptrRecordOfTransportLookup.getService();
 					if(service.contains(DNSLookupPerformer.SERVICE_SIPS)) {
 						transport = ListeningPoint.TLS;
@@ -199,12 +226,17 @@ public class DNSServerLocator {
 			}
 		}
 		transport = transport.toLowerCase();
-		
+		if(logger.isDebugEnabled()) {
+			logger.debug("using transport "+ transport + " for " + sipURI);
+		}
 		// RFC 3263 Section 4.2
 		// Once the transport protocol has been determined, the next step is to
 		// determine the IP address and port.
 
 		if(port != -1) {
+			if(logger.isDebugEnabled()) {
+				logger.debug("doing A and AAAA lookups since TARGET is not numeric and port is not null for " + sipURI);
+			}
 			// If the TARGET was not a numeric IP address, but a port is present in
 			// the URI, the client performs an A or AAAA record lookup of the domain
 			// name.  The result will be a list of IP addresses, each of which can
@@ -214,29 +246,38 @@ public class DNSServerLocator {
 			// 4.3, the next SHOULD be tried, and if that should fail, the next
 			// SHOULD be tried, and so on.
 			return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);
-		} else {			
+		} else {						
 			if(naptrRecordOfTransportLookup != null) {
 				// If the TARGET was not a numeric IP address, and no port was present
 				// in the URI, the client performs an SRV query on the record returned
 				// from the NAPTR processing of Section 4.1, if such processing was
 				// performed.
+				if(logger.isDebugEnabled()) {
+					logger.debug("performing SRV lookup on NAPTR replacement found earlier " + naptrRecordOfTransportLookup.getReplacement() + " for " + sipURI);
+				}
 				List<Record> srvRecords = dnsLookupPerformer.performSRVLookup(naptrRecordOfTransportLookup.getReplacement());
 				if (srvRecords.size() > 0) {
 					return sortSRVRecords(host, transport, srvRecords);
 				} else {
+					if(logger.isDebugEnabled()) {
+						logger.debug("doing A and AAAA lookups since SRV lookups returned no records for NAPTR replacement found earlier " + naptrRecordOfTransportLookup.getReplacement() + " for " + sipURI);
+					}
 					// If no SRV records were found, the client performs an A or AAAA record
 					// lookup of the domain name.
 					return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);
 				}
-			} else if(srvRecordsOfTransportLookup.size() == 0){
+			} else if(srvRecordsOfTransportLookup == null || srvRecordsOfTransportLookup.size() == 0){
 				// If it was not, because a transport was specified
 				// explicitly, the client performs an SRV query for that specific
 				// transport, using the service identifier "_sips" for SIPS URIs.  For a
 				// SIP URI, if the client wishes to use TLS, it also uses the service
 				// identifier "_sips" for that specific transport, otherwise, it uses "_sip"
 				String serviceIdentifier = "_sip._";
-				if (sipURI.isSecure() || transport.equalsIgnoreCase(ListeningPoint.TLS)) {
+				if ((sipURI.isSecure() && !transport.equalsIgnoreCase(ListeningPoint.UDP)) || transport.equalsIgnoreCase(ListeningPoint.TLS)) {
 					serviceIdentifier = "_sips._";
+				}
+				if(logger.isDebugEnabled()) {
+					logger.debug("performing SRV lookup because a transport was specified explicitly for " + sipURI);
 				}
 				List<Record> srvRecords = null;
 				try {
@@ -245,6 +286,9 @@ public class DNSServerLocator {
 					logger.error("Impossible to parse the parameters for dns lookup",e);
 				}	
 				if (srvRecords == null || srvRecords.size() == 0) {
+					if(logger.isDebugEnabled()) {
+						logger.debug("doing A and AAAA lookups since SRV lookups returned no records and transport was specified explicitly for " + sipURI);
+					}
 					// If no SRV records were found, the client performs an A or AAAA record
 					// lookup of the domain name.
 					return dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport);

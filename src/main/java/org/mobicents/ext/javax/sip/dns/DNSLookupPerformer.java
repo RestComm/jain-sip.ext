@@ -113,9 +113,12 @@ public class DNSLookupPerformer {
 		
 		try {
 			Record[] aRecords = new Lookup(host, Type.A).run();
+			if(logger.isDebugEnabled()) {
+				logger.debug("doing A lookup for host:port/transport = " + host + ":" + port + "/" + transport);
+			}
 			if(aRecords != null && aRecords.length > 0) {
-				for(ARecord aRecord : (ARecord[]) aRecords) {
-					priorityQueue.add(new HopImpl(aRecord.getAddress().getHostAddress(), port, transport));
+				for(Record aRecord : aRecords) {
+					priorityQueue.add(new HopImpl(((ARecord)aRecord).getAddress().getHostAddress(), port, transport));
 				}
 			}	
 		} catch (TextParseException e) {
@@ -123,9 +126,12 @@ public class DNSLookupPerformer {
 		}	
 		try {
 			final Record[] aaaaRecords = new Lookup(host, Type.AAAA).run();
+			if(logger.isDebugEnabled()) {
+				logger.debug("doing AAAA lookup for host:port/transport = " + host + ":" + port + "/" + transport);
+			}
 			if(aaaaRecords != null && aaaaRecords.length > 0) {
-				for(AAAARecord aaaaRecord : (AAAARecord[]) aaaaRecords) {
-					priorityQueue.add(new HopImpl(aaaaRecord.getAddress().getHostAddress(), port, transport));
+				for(Record aaaaRecord : aaaaRecords) {
+					priorityQueue.add(new HopImpl(((AAAARecord)aaaaRecord).getAddress().getHostAddress(), port, transport));
 				}
 			}			
 		} catch (TextParseException e) {
