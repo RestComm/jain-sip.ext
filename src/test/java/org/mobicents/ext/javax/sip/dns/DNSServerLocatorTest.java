@@ -155,7 +155,7 @@ public class DNSServerLocatorTest {
 		when(name.isAbsolute()).thenReturn(true);
 		when(name.toString()).thenReturn("localhost");
 		mockedHops.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
-		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + transport.toLowerCase() + "." + host))).thenReturn(mockedHops);
+		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host)).thenReturn(mockedHops);
 		
 		sipURI.setTransportParam(transport);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
@@ -204,7 +204,7 @@ public class DNSServerLocatorTest {
 		when(dnsLookupPerformer.performNAPTRLookup(host, false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		List<Record> mockedSRVRecords = new LinkedList<Record>();
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
-		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + transport.toLowerCase() + "." + host + "."))).thenReturn(mockedSRVRecords);
+		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host + ".")).thenReturn(mockedSRVRecords);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
 		assertNotNull(hops);
@@ -230,8 +230,8 @@ public class DNSServerLocatorTest {
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
 		List<Record> mockedSRVRecordsTCP = new LinkedList<Record>();
 		mockedSRVRecordsTCP.add(new SRVRecord(new Name("_sip._" + "tcp" + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
-		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + transport.toLowerCase() + "." + host))).thenReturn(mockedSRVRecords);
-		when(dnsLookupPerformer.performSRVLookup(new Name("_sip._" + "tcp" + "." + host))).thenReturn(mockedSRVRecordsTCP);
+		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host)).thenReturn(mockedSRVRecords);
+		when(dnsLookupPerformer.performSRVLookup("_sip._" + "tcp" + "." + host)).thenReturn(mockedSRVRecordsTCP);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
 		assertNotNull(hops);
@@ -240,5 +240,41 @@ public class DNSServerLocatorTest {
 		assertEquals(5060, hop.getPort());
 		assertEquals(transport.toLowerCase(), hop.getTransport());
 		assertEquals(LOCALHOST, hop.getHost());
+	}
+	
+	@Test
+	public void testNAPTRComparator() throws TextParseException {
+		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
+		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
+		Name name = mock(Name.class);
+		when(name.isAbsolute()).thenReturn(true);
+		when(name.toString()).thenReturn("localhost");
+			
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000L, 90, 50, "s", "SIP+D2T", "", new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + ".")));	
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000L, 100, 50, "s", "SIP+D2U", "", new Name("_sip._" + ListeningPoint.UDP.toLowerCase() + "." + host + ".")));
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000L, 50, 50, "s", "SIPS+D2T", "", new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + ".")));
+		
+		// Sorting the records
+		java.util.Collections.sort(mockedNAPTRRecords, new NAPTRRecordComparator());
+		
+		assertEquals("SIPS+D2T", mockedNAPTRRecords.get(0).getService());
+		assertEquals("SIP+D2T", mockedNAPTRRecords.get(1).getService());
+		assertEquals("SIP+D2U", mockedNAPTRRecords.get(2).getService());
+	}
+	
+	@Test
+	public void testSRVComparator() throws TextParseException {
+		// mocking the name because localhost is not absolute and localhost. cannot be resolved 			
+		List<SRVRecord> mockedSRVRecords = new LinkedList<SRVRecord>();
+		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 9, 5060, new Name("old-slow-box.example.com.")));	
+		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 3, 9, 5060, new Name("new-fast2-box.example.com.")));
+		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 3, 9, 5060, new Name( "new-fast-box.example.com.")));		
+				
+		// Sorting the records
+		java.util.Collections.sort(mockedSRVRecords, new SRVRecordComparator());
+		
+		assertEquals("new-fast-box.example.com.", mockedSRVRecords.get(0).getTarget().toString());
+		assertEquals("new-fast2-box.example.com.", mockedSRVRecords.get(1).getTarget().toString());
+		assertEquals("old-slow-box.example.com.", mockedSRVRecords.get(2).getTarget().toString());
 	}
 }

@@ -21,10 +21,8 @@ import javax.sip.address.URI;
 import org.apache.log4j.Logger;
 import org.mobicents.ext.javax.sip.utils.Inet6Util;
 import org.xbill.DNS.NAPTRRecord;
-import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
-import org.xbill.DNS.TextParseException;
 
 /**
  * The Address resolver to resolve proxy domain to a hop to the outbound proxy server 
@@ -179,12 +177,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 							logger.debug("no NPATR records found, doing SRV query for supported transport " + serviceIdentifier
 									+ supportedTransport.toLowerCase() + "." + host + " for " + sipURI);
 						}
-						try {
-							srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(new Name(serviceIdentifier
-									+ supportedTransport.toLowerCase() + "." + host));
-						} catch (TextParseException e) {
-							logger.error("Impossible to parse the parameters for dns lookup",e);
-						}						
+						srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(serviceIdentifier
+								+ supportedTransport.toLowerCase() + "." + host);
 						if (srvRecordsOfTransportLookup.size() > 0) {
 							if(logger.isDebugEnabled()) {
 								logger.debug("no NPATR records found, SRV query for supported transport " + serviceIdentifier
@@ -255,7 +249,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				if(logger.isDebugEnabled()) {
 					logger.debug("performing SRV lookup on NAPTR replacement found earlier " + naptrRecordOfTransportLookup.getReplacement() + " for " + sipURI);
 				}
-				List<Record> srvRecords = dnsLookupPerformer.performSRVLookup(naptrRecordOfTransportLookup.getReplacement());
+				List<Record> srvRecords = dnsLookupPerformer.performSRVLookup(naptrRecordOfTransportLookup.getReplacement().toString());
 				if (srvRecords.size() > 0) {
 					return sortSRVRecords(host, transport, srvRecords);
 				} else {
@@ -279,12 +273,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				if(logger.isDebugEnabled()) {
 					logger.debug("performing SRV lookup because a transport was specified explicitly for " + sipURI);
 				}
-				List<Record> srvRecords = null;
-				try {
-					srvRecords = dnsLookupPerformer.performSRVLookup(new Name(serviceIdentifier + transport + "." + host));
-				} catch (TextParseException e) {
-					logger.error("Impossible to parse the parameters for dns lookup",e);
-				}	
+				List<Record> srvRecords = dnsLookupPerformer.performSRVLookup(serviceIdentifier + transport + "." + host);
 				if (srvRecords == null || srvRecords.size() == 0) {
 					if(logger.isDebugEnabled()) {
 						logger.debug("doing A and AAAA lookups since SRV lookups returned no records and transport was specified explicitly for " + sipURI);

@@ -27,7 +27,7 @@ public interface DNSLookupPerformer {
 	 * @param replacement the replacement for which to perform the SRV lookup
 	 * @return an unsorted list of SRV records
 	 */
-	List<Record> performSRVLookup(Name replacement);
+	List<Record> performSRVLookup(String replacement);
 
 	/**
 	 * Performing the DNS NAPTR Lookup for a given domain, whether or not it is secure and the supported transports

@@ -35,9 +35,9 @@ public class NAPTRRecordComparator implements Comparator<NAPTRRecord> {
 		int o1Order = o1.getOrder();
 		int o2Order = o2.getOrder();
 		// The lower order is the best
-		if(o1Order < o2Order)
-			return 1;
 		if(o1Order > o2Order)
+			return 1;
+		if(o1Order < o2Order)
 			return -1;
 		return 0;
 	}

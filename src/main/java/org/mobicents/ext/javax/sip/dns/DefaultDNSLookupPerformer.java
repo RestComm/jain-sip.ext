@@ -53,8 +53,13 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSLookupPerformer#performSRVLookup(org.xbill.DNS.Name)
 	 */
-	public List<Record> performSRVLookup(Name replacement) {
-		Record[] srvRecords = new Lookup(replacement, Type.SRV).run();
+	public List<Record> performSRVLookup(String replacement) {
+		Record[] srvRecords = null;
+		try {
+			srvRecords = new Lookup(replacement, Type.SRV).run();
+		} catch (TextParseException e) {
+			logger.error("Impossible to parse the parameters for dns lookup",e);
+		}
 		if(srvRecords != null && srvRecords.length > 0) {
 			return Arrays.asList(srvRecords);	
 		}
