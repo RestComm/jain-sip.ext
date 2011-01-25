@@ -41,12 +41,17 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	protected Set<String> localHostNames;
 	private DNSLookupPerformer dnsLookupPerformer;
 	
+	public DefaultDNSServerLocator() {
+		localHostNames = new CopyOnWriteArraySet<String>();
+		dnsLookupPerformer = new DefaultDNSLookupPerformer();
+		this.supportedTransports = new CopyOnWriteArraySet<String>();
+	}
+	
 	/**
 	 */
 	public DefaultDNSServerLocator(Set<String> supportedTransports) {
+		this();
 		this.supportedTransports = new CopyOnWriteArraySet<String>(supportedTransports);
-		localHostNames = new CopyOnWriteArraySet<String>();
-		dnsLookupPerformer = new DefaultDNSLookupPerformer();
 	}
 
 	/* (non-Javadoc)
@@ -104,6 +109,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		
 		// if the host belong to the local endpoint, server or container, it tries to resolve the ip address		
 		if(localHostNames.contains(hopHost)) {
+			if(logger.isDebugEnabled()) {
+				logger.debug("host " + hopHost + " is a localhostName belonging to ourselves");
+			}
 			try {
 				InetAddress ipAddress = InetAddress.getByName(hopHost);
 				Queue<Hop> priorityQueue = new LinkedList<Hop>();
@@ -168,21 +176,21 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 					Iterator<String> supportedTransportIterator = supportedTransports.iterator();
 					while (supportedTransportIterator.hasNext() && transport == null) {
 						 String supportedTransport = supportedTransportIterator
-								.next();
+								.next().toLowerCase();
 						String serviceIdentifier = "_sip._";
 						if (sipURI.isSecure()) {
 							serviceIdentifier = "_sips._";
 						}
 						if(logger.isDebugEnabled()) {
 							logger.debug("no NPATR records found, doing SRV query for supported transport " + serviceIdentifier
-									+ supportedTransport.toLowerCase() + "." + host + " for " + sipURI);
+									+ supportedTransport + "." + host + " for " + sipURI);
 						}
 						srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(serviceIdentifier
-								+ supportedTransport.toLowerCase() + "." + host);
+								+ supportedTransport + "." + host);
 						if (srvRecordsOfTransportLookup.size() > 0) {
 							if(logger.isDebugEnabled()) {
 								logger.debug("no NPATR records found, SRV query for supported transport " + serviceIdentifier
-										+ supportedTransport.toLowerCase() + "." + host + " successful for " + sipURI);
+										+ supportedTransport + "." + host + " successful for " + sipURI);
 							}
 							// A particular transport is supported if the query is successful.  
 							// The client MAY use any transport protocol it 
@@ -334,7 +342,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	public String getDefaultTransportForSipUri(SipURI sipURI) {
 		String transport;
 		if(sipURI.isSecure()) {
-			transport = ListeningPoint.TCP;
+			transport = ListeningPoint.TLS;
 		} else {
 			transport = ListeningPoint.UDP;
 		}
@@ -346,6 +354,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#addLocalHostName(java.lang.String)
 	 */
 	public void addLocalHostName(String localHostName) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Adding localHostName "+ localHostName);
+		}
 		localHostNames.add(localHostName);
 	}
 	
@@ -353,6 +364,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#removeLocalHostName(java.lang.String)
 	 */
 	public void removeLocalHostName(String localHostName) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Removing localHostName "+ localHostName);
+		}
 		localHostNames.remove(localHostName);
 	}
 	
@@ -360,6 +374,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#addSupportedTransport(java.lang.String)
 	 */
 	public void addSupportedTransport(String supportedTransport) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Adding supportedTransport "+ supportedTransport);
+		}
 		supportedTransports.add(supportedTransport);
 	}
 	
@@ -367,6 +384,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#removeSupportedTransport(java.lang.String)
 	 */
 	public void removeSupportedTransport(String supportedTransport) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Removing supportedTransport "+ supportedTransport);
+		}
 		supportedTransports.add(supportedTransport);
 	}
 

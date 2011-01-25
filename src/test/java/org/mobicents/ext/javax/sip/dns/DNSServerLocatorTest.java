@@ -90,7 +90,7 @@ public class DNSServerLocatorTest {
 		sipURI.setPort(5080);
 		assertEquals(ListeningPoint.UDP, dnsServerLocator.getDefaultTransportForSipUri(sipURI));
 		sipURI.setSecure(true);
-		assertEquals(ListeningPoint.TCP, dnsServerLocator.getDefaultTransportForSipUri(sipURI));
+		assertEquals(ListeningPoint.TLS, dnsServerLocator.getDefaultTransportForSipUri(sipURI));
 	}
 	
 	/**
