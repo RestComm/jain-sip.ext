@@ -267,14 +267,16 @@ public class DNSServerLocatorTest {
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 			
 		List<SRVRecord> mockedSRVRecords = new LinkedList<SRVRecord>();
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 9, 5060, new Name("old-slow-box.example.com.")));	
+		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 10, 5060, new Name("old2-slow-box.example.com.")));
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 3, 9, 5060, new Name("new-fast2-box.example.com.")));
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 3, 9, 5060, new Name( "new-fast-box.example.com.")));		
 				
 		// Sorting the records
 		java.util.Collections.sort(mockedSRVRecords, new SRVRecordComparator());
 		
-		assertEquals("new-fast-box.example.com.", mockedSRVRecords.get(0).getTarget().toString());
-		assertEquals("new-fast2-box.example.com.", mockedSRVRecords.get(1).getTarget().toString());
-		assertEquals("old-slow-box.example.com.", mockedSRVRecords.get(2).getTarget().toString());
+		assertEquals("old2-slow-box.example.com.", mockedSRVRecords.get(0).getTarget().toString());
+		assertEquals("old-slow-box.example.com.", mockedSRVRecords.get(1).getTarget().toString());		
+		assertEquals("new-fast-box.example.com.", mockedSRVRecords.get(2).getTarget().toString());
+		assertEquals("new-fast2-box.example.com.", mockedSRVRecords.get(3).getTarget().toString());		
 	}
 }

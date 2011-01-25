@@ -38,18 +38,18 @@ public class SRVRecordComparator implements Comparator<Record> {
 		int o1Priority = o1SRVRecord.getPriority();
 		int o2Priority = o2SRVRecord.getPriority();
 		// the lower priority is the best
-		if(o1Priority < o2Priority)
+		if(o1Priority > o2Priority)
 			return 1;
-		if(o1Priority > o1Priority)
+		if(o1Priority < o2Priority)
 			return -1;
 		
 		// if they are the same sort them through weight
 		int o1Weight = o1SRVRecord.getWeight();
 		int o2Weight = o2SRVRecord.getWeight();
 		// the higher weight is the best
-		if(o1Weight > o2Weight)
-			return 1;
 		if(o1Weight < o2Weight)
+			return 1;
+		if(o1Weight > o2Weight)
 			return -1;
 		// RFC 3263 Section 4.4
 		return o1SRVRecord.getTarget().compareTo(o2SRVRecord.getTarget());
