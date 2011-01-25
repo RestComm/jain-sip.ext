@@ -55,7 +55,7 @@ import static org.mockito.Mockito.*;
  */
 public class DNSServerLocatorTest {
 	AddressFactory addressFactory;
-	DNSServerLocator dnsServerLocator;
+	DefaultDNSServerLocator dnsServerLocator;
 	Set<String> supportedTransports;
 	SipURI sipURI;
 	String host = "iptel.org";
@@ -70,7 +70,7 @@ public class DNSServerLocatorTest {
 		supportedTransports = new HashSet<String>();
 		supportedTransports.add(ListeningPoint.UDP);
 		supportedTransports.add(ListeningPoint.TCP);
-		dnsServerLocator = new DNSServerLocator(supportedTransports);
+		dnsServerLocator = new DefaultDNSServerLocator(supportedTransports);
 		sipURI = addressFactory.createSipURI("jean",host);
 	}
 
@@ -82,7 +82,7 @@ public class DNSServerLocatorTest {
 	}
 
 	/**
-	 * Test method for {@link org.mobicents.ext.javax.sip.dns.DNSServerLocator#resolveHostByDnsSrvLookup(javax.sip.address.SipURI)}.
+	 * Test method for {@link org.mobicents.ext.javax.sip.dns.DefaultDNSServerLocator#resolveHostByDnsSrvLookup(javax.sip.address.SipURI)}.
 	 * @throws ParseException 
 	 */
 	@Test
@@ -94,7 +94,7 @@ public class DNSServerLocatorTest {
 	}
 	
 	/**
-	 * Test method for {@link org.mobicents.ext.javax.sip.dns.DNSServerLocator#locateHops(javax.sip.address.URI)}.
+	 * Test method for {@link org.mobicents.ext.javax.sip.dns.DefaultDNSServerLocator#locateHops(javax.sip.address.URI)}.
 	 * @throws ParseException 
 	 */
 	@Test
@@ -109,7 +109,7 @@ public class DNSServerLocatorTest {
 		String transport = ListeningPoint.UDP;
 		int port = 5080;
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
 		mockedHops.add(new HopImpl(LOCALHOST, port, transport));
@@ -131,7 +131,7 @@ public class DNSServerLocatorTest {
 		String transport = ListeningPoint.UDP;
 		int port = 5080;
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
 		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport.toLowerCase())).thenReturn(mockedHops);
@@ -147,7 +147,7 @@ public class DNSServerLocatorTest {
 	public void testResolveHostNoPortButTransportSpecified() throws ParseException, TextParseException {
 		String transport = ListeningPoint.UDP;
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		LinkedList<Record> mockedHops = new LinkedList<Record>();
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
@@ -172,7 +172,7 @@ public class DNSServerLocatorTest {
 		String transport = ListeningPoint.UDP;
 		sipURI.setHost("localhost");
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
 		mockedHops.add(new HopImpl(LOCALHOST, 5060, transport));
@@ -192,7 +192,7 @@ public class DNSServerLocatorTest {
 	public void testResolveHostNoPortNoTransportSpecifiedNAPTRAndSRVFound() throws ParseException, TextParseException {
 		String transport = ListeningPoint.UDP;
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		
 		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
@@ -219,7 +219,7 @@ public class DNSServerLocatorTest {
 	public void testResolveHostNoPortNoTransportSpecifiedNoNAPTRFound() throws ParseException, TextParseException {
 		String transport = ListeningPoint.UDP;
 		
-		DNSLookupPerformer dnsLookupPerformer = mock(DNSLookupPerformer.class);
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
