@@ -3,6 +3,7 @@ package org.mobicents.ext.javax.sip.dns;
 import java.util.Queue;
 
 import javax.sip.address.Hop;
+import javax.sip.address.SipURI;
 import javax.sip.address.URI;
 
 /**
@@ -19,6 +20,16 @@ public interface DNSServerLocator {
 	 * @return a queue of Hop that have to be tried in turn.
 	 */
 	Queue<Hop> locateHops(URI uri);
+	
+	/**
+	 * From the uri passed in parameter, try to find the corresponding SipURI.
+	 * If the uri in parameter is already a SipURI without a user=phone param, it is just returned
+	 * If the uri in parameter is a TelURL or SipURI with a user=phone param, the phone number is converted to a domain name
+	 * then a corresponding NAPTR DNS lookup is done to find the SipURI
+	 * @param uri the uri used to find the corresponding SipURI
+	 * @return the SipURI found through ENUM methods or the uri itself if the uri is already a SipURI without a user=phone param
+	 */
+	SipURI getSipURI(URI uri);
 
 	/**
 	 * Adds a local host name for which the DNS lookups can be bypassed, by example if an URI is targeted at the local server

@@ -38,7 +38,6 @@ import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.NAPTRRecord;
-import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
@@ -54,6 +53,9 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSLookupPerformer#performSRVLookup(org.xbill.DNS.Name)
 	 */
 	public List<Record> performSRVLookup(String replacement) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("doing SRV lookup for replacement " + replacement);
+		}
 		Record[] srvRecords = null;
 		try {
 			srvRecords = new Lookup(replacement, Type.SRV).run();
@@ -71,37 +73,43 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	 */
 	public List<NAPTRRecord> performNAPTRLookup(String domain, boolean isSecure, Set<String> supportedTransports) {
 		List<NAPTRRecord> records = new ArrayList<NAPTRRecord>();
-		
+		if(logger.isDebugEnabled()) {
+			logger.debug("doing NAPTR lookup for domain " + domain + ", isSecure " + isSecure + ", supportedTransports " + supportedTransports.toString());
+		}
+		Record[] naptrRecords = null;
 		try {
-			Record[] naptrRecords = new Lookup(domain, Type.NAPTR).run();
-			if(naptrRecords != null) {
-				for (Record record : naptrRecords) {
-					NAPTRRecord naptrRecord = (NAPTRRecord) record;
-					if(isSecure) {
-						// First, a client resolving a SIPS URI MUST discard any services that
-						// do not contain "SIPS" as the protocol in the service field.
-						if(naptrRecord.getService().startsWith(SERVICE_SIPS)) {
-							records.add(naptrRecord);
-						}
-					} else {	
-						// The converse is not true, however.
-						if(!naptrRecord.getService().startsWith(SERVICE_SIPS) || 
-								(naptrRecord.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
-							//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
-							if((naptrRecord.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
-									naptrRecord.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
-								// Second, a client MUST discard any service fields that identify
-								// a resolution service whose value is not "D2X", for values of X that
-								// indicate transport protocols supported by the client.
-								records.add(naptrRecord);
-							}
-						}
-					}
-				}
-			}
+			naptrRecords = new Lookup(domain, Type.NAPTR).run();
 		} catch (TextParseException e) {
 			logger.warn("Couldn't parse domain " + domain, e);
-		}		
+		}	
+		if(naptrRecords != null) {
+			for (Record record : naptrRecords) {
+				NAPTRRecord naptrRecord = (NAPTRRecord) record;
+				if(isSecure) {
+					// First, a client resolving a SIPS URI MUST discard any services that
+					// do not contain "SIPS" as the protocol in the service field.
+					if(naptrRecord.getService().startsWith(SERVICE_SIPS)) {
+						records.add(naptrRecord);
+					}
+				} else {	
+					// The converse is not true, however.
+					if(!naptrRecord.getService().startsWith(SERVICE_SIPS) || 
+							(naptrRecord.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
+						//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
+						if((naptrRecord.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
+								naptrRecord.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
+							// Second, a client MUST discard any service fields that identify
+							// a resolution service whose value is not "D2X", for values of X that
+							// indicate transport protocols supported by the client.
+							records.add(naptrRecord);
+						} else if(naptrRecord.getService().equals(SERVICE_E2U)) {
+							// ENUM support
+							records.add(naptrRecord);
+						}
+					} 
+				}				
+			}
+		}			
 		return records;
 	}
 

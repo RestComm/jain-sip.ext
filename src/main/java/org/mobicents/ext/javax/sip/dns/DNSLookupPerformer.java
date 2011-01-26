@@ -7,7 +7,6 @@ import java.util.Set;
 import javax.sip.address.Hop;
 
 import org.xbill.DNS.NAPTRRecord;
-import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 
 /**
@@ -20,6 +19,7 @@ public interface DNSLookupPerformer {
 
 	public static final String SERVICE_SIPS = "SIPS";
 	public static final String SERVICE_D2U = "D2U";
+	public static final String SERVICE_E2U = "E2U+sip";
 	public static final String SERVICE_D2T = "D2T";
 
 	/**

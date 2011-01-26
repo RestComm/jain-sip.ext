@@ -1,9 +1,11 @@
 package org.mobicents.ext.javax.sip.dns;
 
+import gov.nist.javax.sip.address.AddressFactoryImpl;
 import gov.nist.javax.sip.stack.HopImpl;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -58,19 +60,73 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#locateHops(javax.sip.address.URI)
 	 */
 	public Queue<Hop> locateHops(URI uri) {
-		if(uri.isSipURI()) {
-			return locateHopsForSipURI((SipURI)uri);
-		} else if(uri instanceof TelURL) {
-			return locateHopsForTelURI((TelURL)uri);
+		SipURI sipUri = getSipURI(uri);
+		if(sipUri != null) {
+			return locateHopsForSipURI(sipUri);
 		}
+		
 		return new LinkedList<Hop>();
 	}
 	
-	public Queue<Hop> locateHopsForTelURI(TelURL telURL) {
-		Queue<Hop> priorityQueue = new LinkedList<Hop>();
-		return priorityQueue;
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#getSipURI(javax.sip.address.URI)
+	 */
+	public SipURI getSipURI(URI uri) {
+		if(uri instanceof TelURL) {
+			return lookupSipUri(((TelURL)uri).getPhoneNumber());
+		} else if(uri.isSipURI() && ((SipURI)uri).getParameter("user").equals("phone")) {
+			return lookupSipUri(((SipURI)uri).getUser());
+		} else if (uri instanceof SipURI) {
+			return (SipURI) uri;
+		}
+		return null;
 	}
 	
+	/**
+	 * The phone number is converted to a domain name
+	 * then a corresponding NAPTR DNS lookup is done to find the SipURI
+	 * @param phoneNumber phone number used to find the corresponding SipURI
+	 * @return the SipURI found through ENUM for the given phone number
+	 */
+	public SipURI lookupSipUri(String phoneNumber) {
+		
+		String domainName = convertPhoneNumberToDomainName(phoneNumber);
+		List<NAPTRRecord> naptrRecords = dnsLookupPerformer.performNAPTRLookup(domainName, false, supportedTransports);
+		if(naptrRecords.size() > 0) {
+			Collections.sort(naptrRecords, new NAPTRRecordComparator());
+			for(NAPTRRecord naptrRecord : naptrRecords) {
+				String replacement = naptrRecord.getReplacement().toString();
+				String sipUriAsString = replacement.substring(0, replacement.length()-2).substring(replacement.indexOf("sip:"));
+				try {
+					return new AddressFactoryImpl().createSipURI(sipUriAsString);
+				} catch (ParseException e) {
+					if(logger.isDebugEnabled()) {
+						logger.debug("replacement " + sipUriAsString + " couldn't be parsed a valid sip uri", e);
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Convert Phone Number to a valid ENUM domain name to be used for NAPTR DNS lookup 
+	 * @param phoneNumber phone number to convert
+	 * @return the corresponding domain name
+	 */
+	private String convertPhoneNumberToDomainName(String phoneNumber) {
+		char[] phoneNumberAsChar = phoneNumber.toCharArray();
+		StringBuilder validPhoneNumber = new StringBuilder();
+		for (char c : phoneNumberAsChar) {
+			if(Character.isDigit(c)) {
+				validPhoneNumber.append(c).append('.');
+			}
+		}
+		return validPhoneNumber.reverse().append(".e164.arpa").substring(1);
+	}
+
 	public Queue<Hop> locateHopsForSipURI(SipURI sipURI) {		
 		
 		final String hopHost = sipURI.getHost();

@@ -36,6 +36,7 @@ import javax.sip.ListeningPoint;
 import javax.sip.address.AddressFactory;
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
+import javax.sip.address.URI;
 
 import org.junit.After;
 import org.junit.Before;
@@ -213,6 +214,25 @@ public class DNSServerLocatorTest {
 		assertEquals(5060, hop.getPort());
 		assertEquals(transport.toLowerCase(), hop.getTransport());
 		assertEquals(LOCALHOST, hop.getHost());
+	}
+	
+	@Test
+	public void testResolveENUM() throws ParseException, TextParseException {
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
+		
+		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
+		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
+		Name name = mock(Name.class);
+		when(name.isAbsolute()).thenReturn(true);
+		when(name.toString()).thenReturn("!^.*$!sip:jean@localhost!.");
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "s", "E2U+sip", "", name));		
+		when(dnsLookupPerformer.performNAPTRLookup("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
+		
+		URI telURI = addressFactory.createTelURL("+358-555-1234567");
+		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
+		assertNotNull(resolvedSipURI);
+		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
 	}
 
 	@Test
