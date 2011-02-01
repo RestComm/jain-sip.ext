@@ -75,7 +75,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	public SipURI getSipURI(URI uri) {
 		if(uri instanceof TelURL) {
 			return lookupSipUri(((TelURL)uri).getPhoneNumber());
-		} else if(uri.isSipURI() && ((SipURI)uri).getParameter("user").equals("phone")) {
+		} else if(uri.isSipURI() && ((SipURI)uri).getParameter("user") != null && ((SipURI)uri).getParameter("user").equals("phone")) {
 			return lookupSipUri(((SipURI)uri).getUser());
 		} else if (uri instanceof SipURI) {
 			return (SipURI) uri;
