@@ -96,13 +96,20 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(naptrRecords.size() > 0) {
 			Collections.sort(naptrRecords, new NAPTRRecordComparator());
 			for(NAPTRRecord naptrRecord : naptrRecords) {
-				String replacement = naptrRecord.getReplacement().toString();
-				String sipUriAsString = replacement.substring(0, replacement.length()-2).substring(replacement.indexOf("sip:"));
-				try {
-					return new AddressFactoryImpl().createSipURI(sipUriAsString);
-				} catch (ParseException e) {
-					if(logger.isDebugEnabled()) {
-						logger.debug("replacement " + sipUriAsString + " couldn't be parsed a valid sip uri", e);
+				String regexp = naptrRecord.getRegexp().toString();
+				if(logger.isDebugEnabled()) {
+					logger.debug("regexp " + regexp + " found for phone number " + phoneNumber);
+				}
+				int schemePosition = regexp.indexOf("sip:");
+				int exclamationPosition = regexp.lastIndexOf('!');
+				if(schemePosition != -1 && exclamationPosition != -1) {
+					String sipUriAsString = regexp.substring(0, exclamationPosition).substring(schemePosition);
+					try {
+						return new AddressFactoryImpl().createSipURI(sipUriAsString);
+					} catch (ParseException e) {
+						if(logger.isDebugEnabled()) {
+							logger.debug("replacement " + sipUriAsString + " couldn't be parsed a valid sip uri", e);
+						}
 					}
 				}
 			}

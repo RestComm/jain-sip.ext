@@ -226,13 +226,22 @@ public class DNSServerLocatorTest {
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
 		when(name.toString()).thenReturn("!^.*$!sip:jean@localhost!.");
-		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "s", "E2U+sip", "", name));		
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "s", "E2U+sip", "!^.*$!sip:jean@localhost!.", name));		
 		when(dnsLookupPerformer.performNAPTRLookup("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		
 		URI telURI = addressFactory.createTelURL("+358-555-1234567");
 		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
 		assertNotNull(resolvedSipURI);
 		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
+	}
+	
+	@Test
+	public void testResolveENUMReal() throws ParseException, TextParseException {
+		
+		URI telURI = addressFactory.createTelURL("+437800047111");
+		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
+		assertNotNull(resolvedSipURI);
+		assertEquals("sip:enum-echo-test@sip.nemox.net", resolvedSipURI.toString());
 	}
 
 	@Test
