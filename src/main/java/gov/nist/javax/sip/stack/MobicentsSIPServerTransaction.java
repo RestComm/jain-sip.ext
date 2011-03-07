@@ -99,6 +99,9 @@ public class MobicentsSIPServerTransaction extends SIPServerTransaction {
 		if (retransmitTimer <= 0)
             throw new IllegalArgumentException(
                     "Retransmit timer must be positive!");
+		if (!((SipStackExtension)sipStack).isSendTryingRightAway() && this.transactionTimerStarted.get())
+            throw new IllegalStateException(
+                    "Transaction timer is already started");
         BASE_TIMER_INTERVAL = retransmitTimer;
 	}
 
