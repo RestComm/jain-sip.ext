@@ -93,4 +93,32 @@ public class MobicentsSIPServerTransaction extends SIPServerTransaction {
 	public void startTransactionTimerForTrying() {
 		super.startTransactionTimer();
 	}
+
+	@Override
+	public void setRetransmitTimer(int retransmitTimer) {
+		if(!((SipStackExtension)sipStack).isSendTryingRightAway()) {
+			super.setRetransmitTimer(retransmitTimer);
+		}
+	}
+
+	@Override
+	public void setTimerD(int interval) {
+		if(!((SipStackExtension)sipStack).isSendTryingRightAway()) {
+			super.setTimerD(interval);
+		}
+	}
+
+	@Override
+	public void setTimerT2(int interval) {
+		if(!((SipStackExtension)sipStack).isSendTryingRightAway()) {
+			super.setTimerT2(interval);
+		}
+	}
+
+	@Override
+	public void setTimerT4(int interval) {
+		if(!((SipStackExtension)sipStack).isSendTryingRightAway()) {
+			super.setTimerT4(interval);
+		}
+	}
 }
