@@ -26,6 +26,7 @@ import javax.sip.SipStack;
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
 import javax.sip.address.URI;
+import javax.sip.header.RouteHeader;
 import javax.sip.message.Request;
 
 import gov.nist.core.CommonLogger;
@@ -95,8 +96,8 @@ public class DNSAwareRouter extends DefaultRouter {
                 SipURI sipUri = (SipURI) uri;
                 if(sipUri.getParameter(DNS_ROUTE) != null) {
                 	if (logger.isLoggingEnabled(LogWriter.TRACE_DEBUG))
-                        logger.logDebug("Removing Route added by container to conform to RFC 3263");
-                	routes.removeFirst();
+                        logger.logDebug("Removing Route added by container to conform to RFC 3263 " + route);
+                	sipRequest.removeFirst(RouteHeader.NAME);
                 }
                 if (!sipUri.hasLrParam()) {
 
