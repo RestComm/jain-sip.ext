@@ -97,7 +97,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	public SipURI getSipURI(URI uri) {
 		if(uri instanceof TelURL) {
 			return lookupSipUri(((TelURL)uri).getPhoneNumber());
-		} else if(uri.isSipURI() && ((SipURI)uri).getParameter("user") != null && ((SipURI)uri).getParameter("user").equals("phone")) {
+		} else if(uri.isSipURI() && ((SipURI)uri).getParameter("user") != null && ((SipURI)uri).getParameter("user").equalsIgnoreCase("phone")) {
 			return lookupSipUri(((SipURI)uri).getUser());
 		} else if (uri instanceof SipURI) {
 			return (SipURI) uri;
@@ -182,7 +182,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			// specified, it uses the default port for the particular transport
 			// protocol.numeric IP address, no DNS lookup to be done
 			if(hopPort == -1) {		
-				if(ListeningPoint.TLS.equals(transport) || (ListeningPoint.TCP.equals(transport) && sipURI.isSecure())) {
+				if(ListeningPoint.TLS.equalsIgnoreCase(transport) || (ListeningPoint.TCP.equalsIgnoreCase(transport) && sipURI.isSecure())) {
 					hopPort = 5061;
 				} else {
 					hopPort = 5060;
