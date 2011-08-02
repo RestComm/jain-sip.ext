@@ -144,7 +144,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 								if(logger.isDebugEnabled()) {
 									logger.debug("group found " + group);
 								}
-								result = result.replace("\\\\" + (i+1), group);
+								result = result.replaceFirst(Matcher.quoteReplacement("\\\\" + (i+1)), group);
 							}
 						
 						try {
