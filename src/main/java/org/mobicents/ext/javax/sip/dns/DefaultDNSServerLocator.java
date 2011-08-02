@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sip.ListeningPoint;
 import javax.sip.address.Hop;
@@ -122,16 +124,45 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				if(logger.isDebugEnabled()) {
 					logger.debug("regexp " + regexp + " found for phone number " + phoneNumber);
 				}
-				int schemePosition = regexp.indexOf("sip:");
-				int exclamationPosition = regexp.lastIndexOf('!');
-				if(schemePosition != -1 && exclamationPosition != -1) {
-					String sipUriAsString = regexp.substring(0, exclamationPosition).substring(schemePosition);
-					try {
-						return new AddressFactoryImpl().createSipURI(sipUriAsString);
-					} catch (ParseException e) {
-						if(logger.isDebugEnabled()) {
-							logger.debug("replacement " + sipUriAsString + " couldn't be parsed a valid sip uri", e);
+
+				// http://code.google.com/p/mobicents/issues/detail?id=2774 : Fix For allowing REGEX 
+				if(regexp.startsWith("!"))
+					regexp=regexp.substring(1);
+				
+				if(regexp.endsWith("!"))
+					regexp=regexp.substring(0,regexp.length()-1);
+				
+				String[] regexPortions=regexp.split("!");
+				if(regexPortions.length==2) {
+					if(regexPortions[1].startsWith("sip:")) {				
+						String result = regexPortions[1];
+						Pattern pattern = Pattern.compile(regexPortions[0]);
+						Matcher regexMatcher = pattern.matcher(phoneNumber);
+						if(regexMatcher.matches())
+							for(int i=0; i<regexMatcher.groupCount(); i++) {
+								String group = regexMatcher.group(i);
+								if(logger.isDebugEnabled()) {
+									logger.debug("group found " + group);
+								}
+								result = result.replace("\\\\" + (i+1), group);
+							}
+						
+						try {
+							return new AddressFactoryImpl().createSipURI(result);
+						} 
+						catch (ParseException e) {
+							if(logger.isDebugEnabled()) {
+								logger.debug("replacement " + result + " couldn't be parsed a valid sip uri : " + e.getMessage());
+							}
 						}
+					} else {
+						if(logger.isDebugEnabled()) {
+							logger.debug("regexp seconf portion  " + regexPortions[1] + " does not start with sip:");
+						}
+					}
+				} else {
+					if(logger.isDebugEnabled()) {
+						logger.debug("regexp " + regexp + " number of portions " + regexPortions.length);
 					}
 				}
 			}

@@ -236,23 +236,33 @@ public class DNSServerLocatorTest {
 		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
 	}
 	
-	@Test
+	/*
+	 * Non regression test for testing regex pattern in NAPTR for ENMU See http://www.ietf.org/mail-archive/web/enum/current/msg05060.html
+	 */
+	@Test	
 	public void testResolveENUMRegex() throws ParseException, TextParseException {
 		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
 		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
 		
 		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
-		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
-		when(name.toString()).thenReturn("!^\\\\+4315056416(.*)$!sip:extension-\\\\1@enum.at!");
-		mockedNAPTRRecords.add(new NAPTRRecord(new Name("*.6.1.4.6.5.0.5.1.3.4.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^\\\\+4315056416(.*)$!sip:extension-\\\\1@enum.at!", name));		
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("*.6.1.4.6.5.0.5.1.3.4.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^(.*)$!sip:\\\\1@enum.at!", name));		
 		when(dnsLookupPerformer.performNAPTRLookup("3.1.6.1.4.6.5.0.5.1.3.4.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		
 		URI telURI = addressFactory.createTelURL("+431505641613");
 		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
 		assertNotNull(resolvedSipURI);
-		assertEquals("sip:extension-13@enum.at", resolvedSipURI.toString());
+		assertEquals("sip:431505641613@enum.at", resolvedSipURI.toString());
+		
+		mockedNAPTRRecords.clear();
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.1.6.8.0.2.3.5.1.2.1.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^(.*)$!sip:\\\\1@example.net!", name));		
+		when(dnsLookupPerformer.performNAPTRLookup("7.1.6.8.0.2.3.5.1.2.1.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
+		
+		telURI = addressFactory.createTelURL("+12153208617");
+		resolvedSipURI = dnsServerLocator.getSipURI(telURI);
+		assertNotNull(resolvedSipURI);
+		assertEquals("sip:12153208617@example.net", resolvedSipURI.toString());
 	}
 	
 	@Test
