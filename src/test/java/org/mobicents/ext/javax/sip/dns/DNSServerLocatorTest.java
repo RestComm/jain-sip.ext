@@ -247,7 +247,7 @@ public class DNSServerLocatorTest {
 		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
-		mockedNAPTRRecords.add(new NAPTRRecord(new Name("*.6.1.4.6.5.0.5.1.3.4.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^(.*)$!sip:\\\\1@enum.at!", name));		
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("*.6.1.4.6.5.0.5.1.3.4.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^431505641613(.*)$!sip:\\\\1@enum.at!", name));		
 		when(dnsLookupPerformer.performNAPTRLookup("3.1.6.1.4.6.5.0.5.1.3.4.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		
 		URI telURI = addressFactory.createTelURL("+431505641613");
