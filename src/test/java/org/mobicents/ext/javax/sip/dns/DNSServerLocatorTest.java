@@ -252,7 +252,7 @@ public class DNSServerLocatorTest {
 		URI telURI = addressFactory.createTelURL("+431505641613");
 		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
 		assertNotNull(resolvedSipURI);
-		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
+		assertEquals("sip:extension-13@enum.at", resolvedSipURI.toString());
 	}
 	
 	@Test
