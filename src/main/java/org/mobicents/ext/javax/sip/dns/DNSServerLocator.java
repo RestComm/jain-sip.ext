@@ -39,15 +39,27 @@ public interface DNSServerLocator {
 	/**
 	 * Discovers servers according to RFC 3263 and/or ENUM support for the given uri passed in parameters
 	 * @param uri the uri for which the DNS lookups have to be done
-	 * @return a queue of Hop that have to be tried in turn.
+	 * @return a queue of Hop that have to be tried each one in turn.
 	 */
 	Queue<Hop> locateHops(URI uri);
 	
 	/**
-	 * From the uri passed in parameter, try to find the corresponding SipURI.
+	 * <p>From the uri passed in parameter, try to find the corresponding SipURI.
 	 * If the uri in parameter is already a SipURI without a user=phone param, it is just returned
 	 * If the uri in parameter is a TelURL or SipURI with a user=phone param, the phone number is converted to a domain name
-	 * then a corresponding NAPTR DNS lookup is done to find the SipURI
+	 * then a corresponding NAPTR DNS lookup is done to find the SipURI</p>
+	 * 
+	 * <p> Usage Example </p>
+	 * <pre>
+	 * 	
+	 * try {
+	 *		URI uri = addressFactory.createTelURL("+12153208617");
+	 *		SipURI sipURI = dnsServerLocator.getSipURI(uri);
+	 * } catch (ServletParseException e) {
+	 * 		logger.error("Impossible to create the tel URL", e);
+	 * }
+	 * </pre>
+	 * 
 	 * @param uri the uri used to find the corresponding SipURI
 	 * @return the SipURI found through ENUM methods or the uri itself if the uri is already a SipURI without a user=phone param
 	 */
