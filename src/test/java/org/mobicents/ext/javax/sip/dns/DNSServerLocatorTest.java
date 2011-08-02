@@ -227,10 +227,29 @@ public class DNSServerLocatorTest {
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
 		when(name.toString()).thenReturn("!^.*$!sip:jean@localhost!.");
-		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "s", "E2U+sip", "!^.*$!sip:jean@localhost!.", name));		
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "s", "E2U+sip", "!^.*$!sip:jean@localhost!", name));		
 		when(dnsLookupPerformer.performNAPTRLookup("7.6.5.4.3.2.1.5.5.5.8.5.3.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		
 		URI telURI = addressFactory.createTelURL("+358-555-1234567");
+		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
+		assertNotNull(resolvedSipURI);
+		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
+	}
+	
+	@Test
+	public void testResolveENUMRegex() throws ParseException, TextParseException {
+		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
+		
+		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
+		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
+		Name name = mock(Name.class);
+		when(name.isAbsolute()).thenReturn(true);
+		when(name.toString()).thenReturn("!^\\\\+4315056416(.*)$!sip:extension-\\\\1@enum.at!");
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name("*.6.1.4.6.5.0.5.1.3.4.e164.arpa" + "."), DClass.IN, 1000, 0, 0, "u", "E2U+sip", "!^\\\\+4315056416(.*)$!sip:extension-\\\\1@enum.at!", name));		
+		when(dnsLookupPerformer.performNAPTRLookup("3.1.6.1.4.6.5.0.5.1.3.4.e164.arpa", false, supportedTransports)).thenReturn(mockedNAPTRRecords);
+		
+		URI telURI = addressFactory.createTelURL("+431505641613");
 		SipURI resolvedSipURI = dnsServerLocator.getSipURI(telURI);
 		assertNotNull(resolvedSipURI);
 		assertEquals("sip:jean@localhost", resolvedSipURI.toString());
