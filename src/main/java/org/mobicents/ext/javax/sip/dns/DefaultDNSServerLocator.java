@@ -126,6 +126,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				}
 
 				// http://code.google.com/p/mobicents/issues/detail?id=2774 : Fix For allowing REGEX 
+				// Contribution from Oifa Yulian from Web Ukraine
 				if(regexp.startsWith("!"))
 					regexp=regexp.substring(1);
 				
