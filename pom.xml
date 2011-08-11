@@ -9,7 +9,7 @@
 
 	<groupId>org.mobicents.javax.sip</groupId>
 	<artifactId>mobicents-jain-sip-ext</artifactId>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
@@ -61,9 +61,9 @@
 	</build>
 
 	<scm>
-		<connection>scm:svn:https://mobicents.googlecode.com/svn/tags/mobicents-jain-sip-ext-1.0</connection>
-		<developerConnection>scm:svn:https://mobicents.googlecode.com/svn/tags/mobicents-jain-sip-ext-1.0</developerConnection>
-		<url>http://mobicents.googlecode.com/svn/tags/mobicents-jain-sip-ext-1.0</url>
+		<connection>scm:svn:https://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</connection>
+		<developerConnection>scm:svn:https://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</developerConnection>
+		<url>http://mobicents.googlecode.com/svn/trunk/servers/jain-sip-ext</url>
 	</scm>
 	
 	<profiles>
