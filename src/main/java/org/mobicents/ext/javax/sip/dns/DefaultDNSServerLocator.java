@@ -461,7 +461,14 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(sipURI.isSecure()) {
 			transport = ListeningPoint.TLS;
 		} else {
-			transport = ListeningPoint.UDP;
+			// Issue http://code.google.com/p/mobicents/issues/detail?id=2836: if no UDP connectors are present
+			// take the TCP one
+			if (supportedTransports.contains(ListeningPoint.UDP))
+				transport = ListeningPoint.UDP;
+			else if (supportedTransports.contains(ListeningPoint.TCP))
+				transport = ListeningPoint.TCP;
+			else
+				throw new IllegalArgumentException("No supported transport for SIP URI " + sipURI);
 		}
 		return transport;
 	}
@@ -494,7 +501,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(logger.isDebugEnabled()) {
 			logger.debug("Adding supportedTransport "+ supportedTransport);
 		}
-		supportedTransports.add(supportedTransport);
+		supportedTransports.add(supportedTransport.toUpperCase());
 	}
 	
 	/* (non-Javadoc)
@@ -504,7 +511,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(logger.isDebugEnabled()) {
 			logger.debug("Removing supportedTransport "+ supportedTransport);
 		}
-		supportedTransports.add(supportedTransport);
+		supportedTransports.add(supportedTransport.toUpperCase());
 	}
 
 	/* (non-Javadoc)
