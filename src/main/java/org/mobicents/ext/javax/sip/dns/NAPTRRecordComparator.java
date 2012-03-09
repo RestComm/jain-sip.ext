@@ -35,6 +35,20 @@ public class NAPTRRecordComparator implements Comparator<NAPTRRecord> {
 	public int compare(NAPTRRecord o1, NAPTRRecord o2) {
 		int o1Order = o1.getOrder();
 		int o2Order = o2.getOrder();
+		
+		//Issue http://code.google.com/p/mobicents/issues/detail?id=3143
+		//Check record preference
+		int o1preference = o1.getPreference();
+		int o2preference = o2.getPreference();
+		
+		if (o1Order == o2Order){
+			if (o1preference > o2preference)
+				return 1;
+			if (o1preference < o2preference)
+				return -1;
+			return 0;
+		}
+		
 		// The lower order is the best
 		if(o1Order > o2Order)
 			return 1;

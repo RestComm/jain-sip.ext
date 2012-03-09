@@ -332,6 +332,25 @@ public class DNSServerLocatorTest {
 	}
 	
 	@Test
+	//Issue http://code.google.com/p/mobicents/issues/detail?id=3143
+	public void testNAPTRPrefComparator() throws TextParseException {
+		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
+		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
+		Name name = mock(Name.class);
+		when(name.isAbsolute()).thenReturn(true);
+		when(name.toString()).thenReturn("localhost");
+			
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000L, 90, 50, "s", "SIP+D2T", "", new Name("_sip._" + ListeningPoint.TCP.toLowerCase() + "." + host + ".")));	
+		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000L, 90, 40, "s", "SIP+D2U", "", new Name("_sip._" + ListeningPoint.UDP.toLowerCase() + "." + host + ".")));
+		
+		// Sorting the records
+		java.util.Collections.sort(mockedNAPTRRecords, new NAPTRRecordComparator());
+				
+		assertEquals("SIP+D2U", mockedNAPTRRecords.get(0).getService());
+		assertEquals("SIP+D2T", mockedNAPTRRecords.get(1).getService());
+	}
+	
+	@Test
 	public void testSRVComparator() throws TextParseException {
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 			
 		List<SRVRecord> mockedSRVRecords = new LinkedList<SRVRecord>();
