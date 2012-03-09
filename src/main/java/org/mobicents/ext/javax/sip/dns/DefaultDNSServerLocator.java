@@ -28,10 +28,13 @@ import gov.nist.javax.sip.stack.HopImpl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -62,17 +65,17 @@ import org.xbill.DNS.SRVRecord;
  */
 public class DefaultDNSServerLocator implements DNSServerLocator {
 	private static final Logger logger = Logger.getLogger(DefaultDNSServerLocator.class);
-	
+
 	protected Set<String> supportedTransports;
 	protected Set<String> localHostNames;
 	private DNSLookupPerformer dnsLookupPerformer;
-	
+
 	public DefaultDNSServerLocator() {
 		localHostNames = new CopyOnWriteArraySet<String>();
 		dnsLookupPerformer = new DefaultDNSLookupPerformer();
 		this.supportedTransports = new CopyOnWriteArraySet<String>();
 	}
-	
+
 	/**
 	 */
 	public DefaultDNSServerLocator(Set<String> supportedTransports) {
@@ -88,10 +91,10 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(sipUri != null) {
 			return locateHopsForSipURI(sipUri);
 		}
-		
+
 		return new LinkedList<Hop>();
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#getSipURI(javax.sip.address.URI)
@@ -106,7 +109,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * The phone number is converted to a domain name
 	 * then a corresponding NAPTR DNS lookup is done to find the SipURI
@@ -114,7 +117,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	 * @return the SipURI found through ENUM for the given phone number
 	 */
 	public SipURI lookupSipUri(String phoneNumber) {
-		
+
 		String domainName = convertPhoneNumberToDomainName(phoneNumber);
 		List<NAPTRRecord> naptrRecords = dnsLookupPerformer.performNAPTRLookup(domainName, false, supportedTransports);
 		if(naptrRecords.size() > 0) {
@@ -129,10 +132,10 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				// Contribution from Oifa Yulian from Web Ukraine
 				if(regexp.startsWith("!"))
 					regexp=regexp.substring(1);
-				
+
 				if(regexp.endsWith("!"))
 					regexp=regexp.substring(0,regexp.length()-1);
-				
+
 				String[] regexPortions=regexp.split("!");
 				if(regexPortions.length==2) {
 					if(regexPortions[1].startsWith("sip:")) {				
@@ -147,7 +150,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 								}
 								result = result.replace("\\\\" + (i+1), group);
 							}
-						
+
 						try {
 							return new AddressFactoryImpl().createSipURI(result);
 						} 
@@ -168,10 +171,10 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				}
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * Convert Phone Number to a valid ENUM domain name to be used for NAPTR DNS lookup 
 	 * @param phoneNumber phone number to convert
@@ -189,11 +192,11 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	}
 
 	public Queue<Hop> locateHopsForSipURI(SipURI sipURI) {		
-		
+
 		final String hopHost = sipURI.getHost();
 		int hopPort = sipURI.getPort();
 		final String hopTransport = sipURI.getTransportParam();	
-		
+
 		if(logger.isDebugEnabled()) {
 			logger.debug("Resolving " + hopHost + " transport " + hopTransport);
 		}
@@ -223,7 +226,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			priorityQueue.add(new HopImpl(hopHost, hopPort, transport));
 			return priorityQueue;
 		} 
-		
+
 		// if the host belong to the local endpoint, server or container, it tries to resolve the ip address		
 		if(localHostNames.contains(hopHost)) {
 			if(logger.isDebugEnabled()) {
@@ -238,14 +241,14 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				logger.warn(hopHost + " belonging to the container cannot be resolved");
 			}			
 		}
-				
+
 		// As per rfc3263 Section 4.2
 		// If the TARGET was not a numeric IP address, and no port was present
 		// in the URI, the client performs an SRV query
 		return resolveHostByDnsSrvLookup(sipURI);
-		
+
 	}
-	
+
 	/**
 	 * Resolve the Host by doing a SRV lookup on it 
 	 * 
@@ -259,9 +262,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		final String host = sipURI.getHost();
 		final int port = sipURI.getPort();				
 		String transport = sipURI.getTransportParam();
-		
+
 		NAPTRRecord naptrRecordOfTransportLookup = null;
-		List<Record> srvRecordsOfTransportLookup = null;
+		List<Record> srvRecordsOfTransportLookup = new ArrayList<Record>();
 		// Determine the transport to be used for a given SIP URI as defined by 
 		// RFC 3263 Section 4.1 Selecting a Transport Protocol
 		if(transport == null) {
@@ -281,7 +284,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				// target is not a numeric IP address, the client SHOULD perform a NAPTR
 				// query for the domain in the URI.
 				List<NAPTRRecord> naptrRecords = dnsLookupPerformer.performNAPTRLookup(host, sipURI.isSecure(), supportedTransports);
-				
+
 				if(naptrRecords == null || naptrRecords.size() == 0) {
 					if(logger.isDebugEnabled()) {
 						logger.debug("no NPATR records found, doing SRV queries for supported transports for " + sipURI);
@@ -291,8 +294,9 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 					// Queries are done using the service identifier "_sip" for SIP URIs and
 					// "_sips" for SIPS URIs
 					Iterator<String> supportedTransportIterator = supportedTransports.iterator();
-					while (supportedTransportIterator.hasNext() && transport == null) {
-						 String supportedTransport = supportedTransportIterator
+					Map<String, List<Record>> resolvedTransports = new HashMap<String, List<Record>>();
+					while (supportedTransportIterator.hasNext()) {
+						String supportedTransport = supportedTransportIterator
 								.next().toLowerCase();
 						String serviceIdentifier = "_sip._";
 						if (sipURI.isSecure()) {
@@ -302,19 +306,57 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 							logger.debug("no NPATR records found, doing SRV query for supported transport " + serviceIdentifier
 									+ supportedTransport + "." + host + " for " + sipURI);
 						}
-						srvRecordsOfTransportLookup = dnsLookupPerformer.performSRVLookup(serviceIdentifier
+						List<Record> lookupRecord = dnsLookupPerformer.performSRVLookup(serviceIdentifier
 								+ supportedTransport + "." + host);
-						if (srvRecordsOfTransportLookup.size() > 0) {
+						if (lookupRecord.size() > 0) {
 							if(logger.isDebugEnabled()) {
 								logger.debug("no NPATR records found, SRV query for supported transport " + serviceIdentifier
 										+ supportedTransport + "." + host + " successful for " + sipURI);
 							}
-							// A particular transport is supported if the query is successful.  
-							// The client MAY use any transport protocol it 
-							// desires which is supported by the server => we use the first one
-							transport = supportedTransport;
+							//Issue 3140 http://code.google.com/p/mobicents/issues/detail?id=3140
+							//We shouldn't return fast with the first transport found
+							//a check should be done in the case of SIPS URI and TLS transport is supported
+							resolvedTransports.put(supportedTransport.toUpperCase(), lookupRecord);
 						}
 					}
+					if (!resolvedTransports.isEmpty()){
+						if(sipURI.isSecure() && (resolvedTransports.keySet().contains(ListeningPoint.TLS) 
+								|| resolvedTransports.keySet().contains(ListeningPoint.TCP)) ){
+							//RFC5630 3.1.3 & RFC3261 26.2.2 -> SIPS indicate "TLS-only" request
+							//SRV Record for TLS could be either
+							// _sips._tcp   OR
+							// _sips._tls
+							if(logger.isDebugEnabled()) {
+								logger.debug("SIPS URI was provided to resolve and TLS transport found by the SRV query. Setting transport to TLS for " + sipURI);
+							}
+							transport = ListeningPoint.TLS;
+							if(resolvedTransports.get(transport) == null) {
+								transport = ListeningPoint.TCP;
+							}
+							srvRecordsOfTransportLookup.addAll(resolvedTransports.get(transport));
+						} else if (!sipURI.isSecure()){
+							if(resolvedTransports.keySet().contains(ListeningPoint.TLS)){
+								//RFC5630 3.1.3 & RFC3261 26.2.2 -> SIP over TLS indicate "best-effort TLS" request
+								//So if SRV Record for TLS found we choose it
+								// _sip._tls 
+								if(logger.isDebugEnabled()) {
+									logger.debug("SIP URI was provided to resolve and TLS transport found by the SRV query. Setting transport to TLS for " + sipURI);
+								}
+								if(resolvedTransports.get(transport) == null) {
+									transport = ListeningPoint.TCP;
+								}
+								srvRecordsOfTransportLookup.addAll(resolvedTransports.get(transport));
+							} else {
+								//RFC3263
+								// A particular transport is supported if the query is successful.  
+								// The client MAY use any transport protocol it 
+								// desires which is supported by the server => we use the first one
+								transport = resolvedTransports.keySet().iterator().next();
+								srvRecordsOfTransportLookup.addAll(resolvedTransports.get(transport));
+							}
+						}
+					}
+
 					if(transport == null) {
 						if(logger.isDebugEnabled()) {
 							logger.debug("no SRV records found for finding transport for " + sipURI);
@@ -326,7 +368,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 				} else {					
 					// Sorting the records
 					java.util.Collections.sort(naptrRecords, new NAPTRRecordComparator());
-					
+
 					naptrRecordOfTransportLookup = naptrRecords.get(0);
 					if(logger.isDebugEnabled()) {
 						logger.debug("naptr records found for finding transport for " + sipURI);
@@ -345,6 +387,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			}
 		}
 		transport = transport.toLowerCase();
+		//Clear 
 		if(logger.isDebugEnabled()) {
 			logger.debug("using transport "+ transport + " for " + sipURI);
 		}
@@ -428,7 +471,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 	private Queue<Hop> sortSRVRecords(final String host, String transport, List<Record> srvRecords) {
 		Queue<Hop> priorityQueue = new LinkedList<Hop>();
 		Collections.sort(srvRecords, new SRVRecordComparator());
-		
+
 		for (Record record : srvRecords) {
 			SRVRecord srvRecord = (SRVRecord) record;
 			int recordPort = srvRecord.getPort();						
@@ -448,7 +491,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 						"we are going to just use the domain name directly" + resolvedName, e);
 			}
 		}		
-		
+
 		return priorityQueue;
 	}
 
@@ -472,8 +515,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		}
 		return transport;
 	}
-	
-	
+
+
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#addLocalHostName(java.lang.String)
 	 */
@@ -483,7 +526,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		}
 		localHostNames.add(localHostName);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#removeLocalHostName(java.lang.String)
 	 */
@@ -493,7 +536,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		}
 		localHostNames.remove(localHostName);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#addSupportedTransport(java.lang.String)
 	 */
@@ -503,7 +546,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		}
 		supportedTransports.add(supportedTransport.toUpperCase());
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#removeSupportedTransport(java.lang.String)
 	 */
