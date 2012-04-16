@@ -9,7 +9,7 @@
 
 	<groupId>org.mobicents.javax.sip</groupId>
 	<artifactId>mobicents-jain-sip-ext</artifactId>
-	<version>6.1.0-TelScale-SNAPSHOT</version>
+	<version>1.2-SNAPSHOT</version>
 
 	<name>Mobicents JAIN SIP Ext</name>
 	<description>Mobicents JAIN SIP Extensions</description>
