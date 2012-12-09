@@ -34,7 +34,7 @@ import org.mobicents.ext.javax.sip.SipStackExtension;
  * @author jean.deruelle@gmail.com
  *
  */
-public class MobicentsSIPServerTransaction extends SIPServerTransaction {
+public class MobicentsSIPServerTransaction extends SIPServerTransactionImpl {
 
 	public MobicentsSIPServerTransaction(SIPTransactionStack sipStack,
 			MessageChannel newChannelToUse) {
@@ -42,7 +42,7 @@ public class MobicentsSIPServerTransaction extends SIPServerTransaction {
 	}
 
 	@Override
-	protected void map() {		
+	public void map() {		
 		if(((SipStackExtension)sipStack).isSendTryingRightAway()) {
 			sendTryingRightAway();
 		} else {
@@ -85,7 +85,7 @@ public class MobicentsSIPServerTransaction extends SIPServerTransaction {
 	}
 	
 	@Override
-	protected void startTransactionTimer() {
+	public void startTransactionTimer() {
 		if(!((SipStackExtension)sipStack).isSendTryingRightAway() || getLastResponseStatusCode() != 100) {
 			super.startTransactionTimer();
 		}
@@ -103,7 +103,7 @@ public class MobicentsSIPServerTransaction extends SIPServerTransaction {
 		if (!((SipStackExtension)sipStack).isSendTryingRightAway() && this.transactionTimerStarted.get())
             throw new IllegalStateException(
                     "Transaction timer is already started");
-        BASE_TIMER_INTERVAL = retransmitTimer;
+        baseTimerInterval = retransmitTimer;
 	}
 
 }

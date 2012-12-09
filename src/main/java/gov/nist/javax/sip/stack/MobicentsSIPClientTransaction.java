@@ -26,7 +26,7 @@ package gov.nist.javax.sip.stack;
  * @author jean.deruelle@gmail.com
  *
  */
-public class MobicentsSIPClientTransaction extends SIPClientTransaction {
+public class MobicentsSIPClientTransaction extends SIPClientTransactionImpl {
 
 	/**
 	 * @param newSIPStack
