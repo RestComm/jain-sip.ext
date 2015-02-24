@@ -197,7 +197,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 
 		final String hopHost = sipURI.getHost();
 		int hopPort = sipURI.getPort();
-		final String hopTransport = sipURI.getTransportParam();	
+		// https://code.google.com/p/jain-sip/issues/detail?id=154
+		final String hopTransport = sipURI.isSecure() ? ListeningPoint.TLS : sipURI.getTransportParam();		
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("Resolving " + hopHost + " transport " + hopTransport);
