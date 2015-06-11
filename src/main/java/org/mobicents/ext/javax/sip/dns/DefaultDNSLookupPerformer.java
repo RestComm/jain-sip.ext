@@ -160,8 +160,11 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	// https://code.google.com/p/jain-sip/issues/detail?id=162
 	@Override
 	public void setDNSTimeout(int timeout) {
-		Lookup.getDefaultResolver().setTimeout(DEFAULT_DNS_TIMEOUT_SECONDS, 0);
+		Lookup.getDefaultResolver().setTimeout(timeout, 0);
 		dnsTimeout = timeout;
+		if(logger.isInfoEnabled()) {
+			logger.info("DefaultDNSLookupPerformer will be using timeout of " + dnsTimeout + " seconds ");
+		}
 	}
 
 	@Override

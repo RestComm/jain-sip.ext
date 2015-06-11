@@ -157,6 +157,7 @@ public class DNSServerLocatorTest {
 //		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
 //		mockedHops.add(new HopImpl(LOCALHOST, port, transport));
 //		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport.toLowerCase())).thenReturn(mockedHops);
+		dnsServerLocator.getDnsLookupPerformer().setDNSTimeout(1);
 		Queue<Hop> hops = dnsServerLocator.getDnsLookupPerformer().locateHopsForNonNumericAddressWithPort("gsc.com", port, transport);
 		assertNotNull(hops);
 		assertEquals(0, hops.size());
