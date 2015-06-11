@@ -49,6 +49,14 @@ import org.xbill.DNS.Type;
  */
 public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	private static final Logger logger = Logger.getLogger(DefaultDNSLookupPerformer.class);
+	private static int DEFAULT_DNS_TIMEOUT_SECONDS = 1;
+	private int dnsTimeout;
+	
+	public DefaultDNSLookupPerformer() {
+		// https://code.google.com/p/jain-sip/issues/detail?id=162
+		dnsTimeout = DEFAULT_DNS_TIMEOUT_SECONDS;
+		Lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.mobicents.ext.javax.sip.dns.DNSLookupPerformer#performSRVLookup(org.xbill.DNS.Name)
@@ -121,10 +129,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 		Queue<Hop> priorityQueue = new LinkedList<Hop>();
 		
 		try {
-			Record[] aRecords = new Lookup(host, Type.A).run();
 			if(logger.isDebugEnabled()) {
 				logger.debug("doing A lookup for host:port/transport = " + host + ":" + port + "/" + transport);
 			}
+			Record[] aRecords = new Lookup(host, Type.A).run();
 			if(aRecords != null && aRecords.length > 0) {
 				for(Record aRecord : aRecords) {
 					priorityQueue.add(new HopImpl(((ARecord)aRecord).getAddress().getHostAddress(), port, transport));
@@ -134,10 +142,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			logger.warn("Couldn't parse domain " + host, e);
 		}	
 		try {
-			final Record[] aaaaRecords = new Lookup(host, Type.AAAA).run();
 			if(logger.isDebugEnabled()) {
 				logger.debug("doing AAAA lookup for host:port/transport = " + host + ":" + port + "/" + transport);
 			}
+			final Record[] aaaaRecords = new Lookup(host, Type.AAAA).run();
 			if(aaaaRecords != null && aaaaRecords.length > 0) {
 				for(Record aaaaRecord : aaaaRecords) {
 					priorityQueue.add(new HopImpl(((AAAARecord)aaaaRecord).getAddress().getHostAddress(), port, transport));
@@ -147,5 +155,17 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			logger.warn("Couldn't parse domain " + host, e);
 		}	
 		return priorityQueue;
+	}
+
+	// https://code.google.com/p/jain-sip/issues/detail?id=162
+	@Override
+	public void setDNSTimeout(int timeout) {
+		Lookup.getDefaultResolver().setTimeout(DEFAULT_DNS_TIMEOUT_SECONDS, 0);
+		dnsTimeout = timeout;
+	}
+
+	@Override
+	public int getDNSTimeout() {
+		return dnsTimeout;
 	}
 }

@@ -70,5 +70,8 @@ public interface DNSLookupPerformer {
 	 */
 	Queue<Hop> locateHopsForNonNumericAddressWithPort(
 			String host, int port, String transport);
+	
+	void setDNSTimeout(int timeout);
+	int getDNSTimeout();
 
 }

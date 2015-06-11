@@ -148,6 +148,25 @@ public class DNSServerLocatorTest {
 	}
 	
 	@Test
+	public void testResolveHostByAandAAAALookupTimeout() throws ParseException {
+		String transport = ListeningPoint.UDP;
+		int port = 5080;
+		
+//		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+//		dnsServerLocator.setDnsLookupPerformer(dnsLookupPerformer);
+//		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
+//		mockedHops.add(new HopImpl(LOCALHOST, port, transport));
+//		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport.toLowerCase())).thenReturn(mockedHops);
+		sipURI = addressFactory.createSipURI("jean","gsc.com");
+	
+		sipURI.setTransportParam(transport);
+		sipURI.setPort(port);
+		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
+		assertNotNull(hops);
+		assertEquals(0, hops.size());
+	}
+	
+	@Test
 	public void testResolveHostByAandAAAALookupCheckEmpty() throws ParseException {
 		String transport = ListeningPoint.UDP;
 		int port = 5080;
