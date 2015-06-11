@@ -157,11 +157,7 @@ public class DNSServerLocatorTest {
 //		LinkedList<Hop> mockedHops = new LinkedList<Hop>();
 //		mockedHops.add(new HopImpl(LOCALHOST, port, transport));
 //		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport.toLowerCase())).thenReturn(mockedHops);
-		sipURI = addressFactory.createSipURI("jean","gsc.com");
-	
-		sipURI.setTransportParam(transport);
-		sipURI.setPort(port);
-		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
+		Queue<Hop> hops = dnsServerLocator.getDnsLookupPerformer().locateHopsForNonNumericAddressWithPort("gsc.com", port, transport);
 		assertNotNull(hops);
 		assertEquals(0, hops.size());
 	}
