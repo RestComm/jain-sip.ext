@@ -67,7 +67,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 		}
 		Record[] srvRecords = null;
 		try {
-			srvRecords = new Lookup(replacement, Type.SRV).run();
+			Lookup lookup = new Lookup(replacement, Type.SRV);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
+			srvRecords = lookup.run();
 		} catch (TextParseException e) {
 			logger.error("Impossible to parse the parameters for dns lookup",e);
 		}
@@ -87,7 +90,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 		}
 		Record[] naptrRecords = null;
 		try {
-			naptrRecords = new Lookup(domain, Type.NAPTR).run();
+			Lookup lookup = new Lookup(domain, Type.NAPTR);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
+			naptrRecords = lookup.run();
 		} catch (TextParseException e) {
 			logger.warn("Couldn't parse domain " + domain, e);
 		}	
@@ -132,7 +138,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			if(logger.isDebugEnabled()) {
 				logger.debug("doing A lookup for host:port/transport = " + host + ":" + port + "/" + transport);
 			}
-			Record[] aRecords = new Lookup(host, Type.A).run();
+			Lookup lookup = new Lookup(host, Type.A);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
+			Record[] aRecords = lookup.run();
 			if(aRecords != null && aRecords.length > 0) {
 				for(Record aRecord : aRecords) {
 					priorityQueue.add(new HopImpl(((ARecord)aRecord).getAddress().getHostAddress(), port, transport));
@@ -145,7 +154,10 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			if(logger.isDebugEnabled()) {
 				logger.debug("doing AAAA lookup for host:port/transport = " + host + ":" + port + "/" + transport);
 			}
-			final Record[] aaaaRecords = new Lookup(host, Type.AAAA).run();
+			Lookup lookup = new Lookup(host, Type.AAAA);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout);
+			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
+			Record[] aaaaRecords = lookup.run();
 			if(aaaaRecords != null && aaaaRecords.length > 0) {
 				for(Record aaaaRecord : aaaaRecords) {
 					priorityQueue.add(new HopImpl(((AAAARecord)aaaaRecord).getAddress().getHostAddress(), port, transport));
@@ -160,6 +172,7 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 	// https://code.google.com/p/jain-sip/issues/detail?id=162
 	@Override
 	public void setDNSTimeout(int timeout) {
+		Lookup.getDefaultResolver().setTimeout(timeout);
 		Lookup.getDefaultResolver().setTimeout(timeout, 0);
 		dnsTimeout = timeout;
 		if(logger.isInfoEnabled()) {
