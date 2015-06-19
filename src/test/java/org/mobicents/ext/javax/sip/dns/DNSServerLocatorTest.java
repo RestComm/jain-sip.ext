@@ -23,6 +23,8 @@ import static org.junit.Assert.*;
 import gov.nist.javax.sip.address.AddressFactoryImpl;
 import gov.nist.javax.sip.stack.HopImpl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -39,6 +41,7 @@ import javax.sip.address.URI;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.xbill.DNS.ARecord;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.NAPTRRecord;
 import org.xbill.DNS.Name;
@@ -57,7 +60,7 @@ public class DNSServerLocatorTest {
 	DefaultDNSServerLocator dnsServerLocator;
 	Set<String> supportedTransports;
 	SipURI sipURI;
-	String host = "iptel.org";
+	String host = "telestax.com";
 	public static final String LOCALHOST = "127.0.0.1";	
 	
 	/**
@@ -158,7 +161,7 @@ public class DNSServerLocatorTest {
 //		mockedHops.add(new HopImpl(LOCALHOST, port, transport));
 //		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(host, port, transport.toLowerCase())).thenReturn(mockedHops);
 		dnsServerLocator.getDnsLookupPerformer().setDNSTimeout(1);
-		Queue<Hop> hops = dnsServerLocator.getDnsLookupPerformer().locateHopsForNonNumericAddressWithPort("dhkfdkldjsmdjeoife.com", port, transport);
+		Queue<Hop> hops = dnsServerLocator.getDnsLookupPerformer().locateHopsForNonNumericAddressWithPort("dhsskfdkldjsmdjeoife.org", port, transport);
 		assertNotNull(hops);
 		assertEquals(0, hops.size());
 	}
@@ -190,9 +193,13 @@ public class DNSServerLocatorTest {
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
-		when(name.toString()).thenReturn("localhost");
+		when(name.toString()).thenReturn("telestax.com");
 		mockedHops.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
 		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host)).thenReturn(mockedHops);
+		
+		Queue<Hop> mockedARecords = new LinkedList<Hop>();
+		mockedARecords.add(new HopImpl(LOCALHOST, 5060, transport.toLowerCase()));
+		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("telestax.com", 5060, transport.toLowerCase())).thenReturn(mockedARecords);
 		
 		sipURI.setTransportParam(transport);
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
@@ -226,7 +233,7 @@ public class DNSServerLocatorTest {
 	}
 	
 	@Test
-	public void testResolveHostNoPortNoTransportSpecifiedNAPTRAndSRVFound() throws ParseException, TextParseException {
+	public void testResolveHostNoPortNoTransportSpecifiedNAPTRAndSRVFound() throws ParseException, TextParseException, UnknownHostException {
 		String transport = ListeningPoint.UDP;
 		
 		DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
@@ -236,12 +243,16 @@ public class DNSServerLocatorTest {
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
-		when(name.toString()).thenReturn("localhost");
+		when(name.toString()).thenReturn("telestax.com");
 		mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000, 0, 0, "s", "SIP+D2U", "", new Name("_sip._" + transport.toLowerCase() + "." + host + ".")));		
 		when(dnsLookupPerformer.performNAPTRLookup(host, false, supportedTransports)).thenReturn(mockedNAPTRRecords);
 		List<Record> mockedSRVRecords = new LinkedList<Record>();
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
 		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host + ".")).thenReturn(mockedSRVRecords);
+		
+		Queue<Hop> mockedARecords = new LinkedList<Hop>();
+		mockedARecords.add(new HopImpl(LOCALHOST, 5060, transport.toLowerCase()));
+		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("telestax.com", 5060, transport.toLowerCase())).thenReturn(mockedARecords);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
 		assertNotNull(hops);
@@ -329,13 +340,17 @@ public class DNSServerLocatorTest {
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 
 		Name name = mock(Name.class);
 		when(name.isAbsolute()).thenReturn(true);
-		when(name.toString()).thenReturn("localhost");
+		when(name.toString()).thenReturn("telestax.com");
 		List<Record> mockedSRVRecords = new LinkedList<Record>();
 		mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + transport.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
 		List<Record> mockedSRVRecordsTCP = new LinkedList<Record>();
 		mockedSRVRecordsTCP.add(new SRVRecord(new Name("_sip._" + "tcp" + "." + host + "."), DClass.IN, 1000L, 0, 0, 5060, name));
 		when(dnsLookupPerformer.performSRVLookup("_sip._" + transport.toLowerCase() + "." + host)).thenReturn(mockedSRVRecords);
 		when(dnsLookupPerformer.performSRVLookup("_sip._" + "tcp" + "." + host)).thenReturn(mockedSRVRecordsTCP);
+		
+		Queue<Hop> mockedARecords = new LinkedList<Hop>();
+		mockedARecords.add(new HopImpl(LOCALHOST, 5060, transport.toLowerCase()));
+		when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("telestax.com", 5060, transport.toLowerCase())).thenReturn(mockedARecords);
 		
 		Queue<Hop> hops = dnsServerLocator.resolveHostByDnsSrvLookup(sipURI);
 		assertNotNull(hops);

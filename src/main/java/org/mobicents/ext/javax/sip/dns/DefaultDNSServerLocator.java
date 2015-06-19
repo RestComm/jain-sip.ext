@@ -235,14 +235,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			if(logger.isDebugEnabled()) {
 				logger.debug("host " + hopHost + " is a localhostName belonging to ourselves");
 			}
-			try {
-				InetAddress ipAddress = InetAddress.getByName(hopHost);
-				Queue<Hop> priorityQueue = new LinkedList<Hop>();
-				priorityQueue.add(new HopImpl(ipAddress.getHostAddress(), hopPort, hopTransport));
-				return priorityQueue;
-			} catch (UnknownHostException e) {
-				logger.warn(hopHost + " belonging to the container cannot be resolved");
-			}			
+			Queue<Hop> priorityQueue = dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(hopHost, hopPort, hopTransport);
+			return priorityQueue;
 		}
 
 		// As per rfc3263 Section 4.2
@@ -479,19 +473,22 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			SRVRecord srvRecord = (SRVRecord) record;
 			int recordPort = srvRecord.getPort();						
 			String resolvedName = srvRecord.getTarget().toString();
-			try {
-				String hostAddress= InetAddress.getByName(resolvedName).getHostAddress();
+			if(logger.isDebugEnabled()) {
+				logger.debug("Looking up " +
+						""+ host + "/" + transport +
+						" , Host Name = " + resolvedName +
+						", Host Port = " + recordPort);
+			}
+			Queue<Hop> hostnameLookupQueue = dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(resolvedName, recordPort, transport);
+			if(hostnameLookupQueue != null) {
 				if(logger.isDebugEnabled()) {
 					logger.debug("Did a successful DNS SRV lookup for host:transport " +
 							""+ host + "/" + transport +
 							" , Host Name = " + resolvedName +
-							" , Host IP Address = " + hostAddress + 
+							" , Host IP Address = " + hostnameLookupQueue + 
 							", Host Port = " + recordPort);
-				}				
-				priorityQueue.add(new HopImpl(hostAddress, recordPort, transport));
-			} catch (UnknownHostException e) {
-				logger.error("Impossible to get the host address of the resolved name, " +
-						"we are going to just use the domain name directly" + resolvedName, e);
+				}
+				priorityQueue.addAll(hostnameLookupQueue);
 			}
 		}		
 
