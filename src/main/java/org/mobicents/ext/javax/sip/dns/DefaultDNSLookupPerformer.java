@@ -142,6 +142,9 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			lookup.getDefaultResolver().setTimeout(dnsTimeout);
 			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
 			Record[] aRecords = lookup.run();
+			if(logger.isDebugEnabled()) {
+				logger.debug("A lookup results for host:port/transport = " + host + ":" + port + "/" + transport + " => " + aRecords);
+			}
 			if(aRecords != null && aRecords.length > 0) {
 				for(Record aRecord : aRecords) {
 					priorityQueue.add(new HopImpl(((ARecord)aRecord).getAddress().getHostAddress(), port, transport));
@@ -158,6 +161,9 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 			lookup.getDefaultResolver().setTimeout(dnsTimeout);
 			lookup.getDefaultResolver().setTimeout(dnsTimeout, 0);
 			Record[] aaaaRecords = lookup.run();
+			if(logger.isDebugEnabled()) {
+				logger.debug("AAAA lookup results for host:port/transport = " + host + ":" + port + "/" + transport + " => " + aaaaRecords);
+			}
 			if(aaaaRecords != null && aaaaRecords.length > 0) {
 				for(Record aaaaRecord : aaaaRecords) {
 					priorityQueue.add(new HopImpl(((AAAARecord)aaaaRecord).getAddress().getHostAddress(), port, transport));
