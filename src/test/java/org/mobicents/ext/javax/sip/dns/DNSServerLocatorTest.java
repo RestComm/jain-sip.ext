@@ -19,11 +19,15 @@
 
 package org.mobicents.ext.javax.sip.dns;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import gov.nist.javax.sip.address.AddressFactoryImpl;
 import gov.nist.javax.sip.stack.HopImpl;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.HashSet;
@@ -31,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.sip.ListeningPoint;
 import javax.sip.address.AddressFactory;
@@ -41,15 +46,12 @@ import javax.sip.address.URI;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.xbill.DNS.ARecord;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.NAPTRRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.TextParseException;
-
-import static org.mockito.Mockito.*;
 
 /**
  * @author jean.deruelle@gmail.com
@@ -93,6 +95,21 @@ public class DNSServerLocatorTest {
 		assertEquals(ListeningPoint.UDP, dnsServerLocator.getDefaultTransportForSipUri(sipURI));
 		sipURI.setSecure(true);
 		assertEquals(ListeningPoint.TLS, dnsServerLocator.getDefaultTransportForSipUri(sipURI));
+	}
+	
+	/**
+	 * Non Regression test for https://code.google.com/p/jain-sip/issues/detail?id=162
+	 * Test method for {@link org.mobicents.ext.javax.sip.dns.DefaultDNSServerLocator#resolveHostByAandAAAALookup(String, int, String)}.
+	 */
+	@Test
+	public void testResolveHostByAandAAAALookupwithLocalHostNameMapping() {
+		Set<String> ipAddress = new CopyOnWriteArraySet<String>();
+		ipAddress.add("127.0.0.1");
+		dnsServerLocator.mapLocalHostNameToIP("test.mobicents.org", ipAddress);
+		Queue<Hop> hops = dnsServerLocator.resolveHostByAandAAAALookup("test.mobicents.org", -1, ListeningPoint.UDP);
+		assertNotNull(hops);
+		assertEquals(1, hops.size());
+		assertEquals("127.0.0.1", hops.peek().getHost());
 	}
 	
 	/**

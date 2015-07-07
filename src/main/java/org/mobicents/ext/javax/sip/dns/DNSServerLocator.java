@@ -23,6 +23,7 @@
 package org.mobicents.ext.javax.sip.dns;
 
 import java.util.Queue;
+import java.util.Set;
 
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
@@ -42,6 +43,16 @@ public interface DNSServerLocator {
 	 * @return a queue of Hop that have to be tried each one in turn.
 	 */
 	Queue<Hop> locateHops(URI uri);
+	
+	/**
+	 * Resolve Hostname to lookup IPAddresses corresponding to a given host including local Host Names as DNSJava is bypassing /etc/hosts
+	 * @param hopHost hostname to lookup
+	 * @param hopPort port if any (not useful for lookup, will just be added in the resulting Hop from the Queue)
+	 * @param hopTransport transport if any (not useful for lookup, will just be added in the resulting Hop from the Queue)
+	 * @return
+	 */
+	public Queue<Hop> resolveHostByAandAAAALookup(final String hopHost, int hopPort,
+			final String hopTransport);
 	
 	/**
 	 * <p>From the uri passed in parameter, try to find the corresponding SipURI.
@@ -75,6 +86,17 @@ public interface DNSServerLocator {
 	 * @param localHostName the name of the local host to remove
 	 */
 	void removeLocalHostName(String localHostName);
+	/**
+	 * Adds a local host name for which the DNS lookups that are bypassed DNSJava can resolve to a set of IP Addresses
+	 * @param localHostName the name of the local host to add
+	 * @param ipAddresses the list of ip addresses to map to that hostname 
+	 */
+	void mapLocalHostNameToIP(String localHostName, Set<String> ipAddresses);
+	/**
+	 * Removes a local host name to ip addresses mapping
+	 * @param localHostName the name of the local host to remove
+	 */
+	void unmapLocalHostNameToIP(String localHostName);
 	/**
 	 * Add a supported transport (UDP, TCP, TLS, SCTP) to the set of supported transports.
 	 * The supported transports are needed for supporting RFC 3263 in specific cases

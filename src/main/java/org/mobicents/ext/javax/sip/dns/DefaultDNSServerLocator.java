@@ -22,8 +22,6 @@ package org.mobicents.ext.javax.sip.dns;
 import gov.nist.javax.sip.address.AddressFactoryImpl;
 import gov.nist.javax.sip.stack.HopImpl;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,10 +64,13 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 
 	protected Set<String> supportedTransports;
 	protected Set<String> localHostNames;
+	// Added for https://code.google.com/p/jain-sip/issues/detail?id=162 as DNS Java doesn't use /etc/hosts
+	protected Map<String, Set<String>> localHostNamesToIPMap;
 	private DNSLookupPerformer dnsLookupPerformer;
 
 	public DefaultDNSServerLocator() {
 		localHostNames = new CopyOnWriteArraySet<String>();
+		localHostNamesToIPMap = new ConcurrentHashMap<String, Set<String>>(0);
 		dnsLookupPerformer = new DefaultDNSLookupPerformer();
 		this.supportedTransports = new CopyOnWriteArraySet<String>();
 	}
@@ -235,7 +237,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			if(logger.isDebugEnabled()) {
 				logger.debug("host " + hopHost + " is a localhostName belonging to ourselves");
 			}
-			Queue<Hop> priorityQueue = dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(hopHost, hopPort, hopTransport);
+			Queue<Hop> priorityQueue = resolveHostByAandAAAALookup(hopHost, hopPort,
+					hopTransport);
 			return priorityQueue;
 		}
 
@@ -244,6 +247,27 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		// in the URI, the client performs an SRV query
 		return resolveHostByDnsSrvLookup(sipURI);
 
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#resolveHostByAandAAAALookup(java.lang.String, int, java.lang.String)
+	 */
+	public Queue<Hop> resolveHostByAandAAAALookup(final String hopHost, int hopPort,
+			final String hopTransport) {
+		Queue<Hop> priorityQueue = dnsLookupPerformer.locateHopsForNonNumericAddressWithPort(hopHost, hopPort, hopTransport);
+		if(priorityQueue.isEmpty() && !localHostNamesToIPMap.isEmpty()) {
+			Set<String> ipAddresses = localHostNamesToIPMap.get(hopHost);
+			if(ipAddresses != null) {
+				if(logger.isDebugEnabled()) {
+					logger.debug("host " + hopHost + " is a localhostName belonging to ourselves, adding corresponding ip addresses " + ipAddresses.toArray().toString());
+				}
+				for (String ipAddress : ipAddresses) {
+					priorityQueue.add(new HopImpl(ipAddress, hopPort, hopTransport));
+				}
+			}
+		}
+		return priorityQueue;
 	}
 
 	/**
@@ -535,6 +559,31 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 			logger.debug("Removing localHostName "+ localHostName);
 		}
 		localHostNames.remove(localHostName);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#mapLocalHostNameToIP(java.lang.String, java.util.Set)
+	 */
+	@Override
+	public void mapLocalHostNameToIP(String localHostName,
+			Set<String> ipAddresses) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Mapping localHostName "+ localHostName + " to " + ipAddresses.toArray().toString());
+		}
+		localHostNamesToIPMap.put(localHostName, ipAddresses);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.ext.javax.sip.dns.DNSServerLocator#unmapLocalHostNameToIP(java.lang.String)
+	 */
+	@Override
+	public void unmapLocalHostNameToIP(String localHostName) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Unmapping localHostName "+ localHostName);
+		}
+		localHostNamesToIPMap.remove(localHostName);
 	}
 
 	/* (non-Javadoc)
