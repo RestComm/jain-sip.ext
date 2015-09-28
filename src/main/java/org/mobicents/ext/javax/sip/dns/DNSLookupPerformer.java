@@ -41,7 +41,7 @@ public interface DNSLookupPerformer {
 
 	public static final String SERVICE_SIPS = "SIPS";
 	public static final String SERVICE_D2U = "D2U";
-	public static final String SERVICE_E2U = "E2U+sip";
+	public static final String SERVICE_E2U = "E2U+SIP";
 	public static final String SERVICE_D2T = "D2T";
 
 	/**

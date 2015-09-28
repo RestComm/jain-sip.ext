@@ -394,7 +394,8 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 					if(logger.isDebugEnabled()) {
 						logger.debug("naptr records found for finding transport for " + sipURI);
 					}
-					String service = naptrRecordOfTransportLookup.getService();
+					// https://github.com/Mobicents/jain-sip.ext/issues/1
+					String service = naptrRecordOfTransportLookup.getService().toUpperCase();
 					if(service.contains(DNSLookupPerformer.SERVICE_SIPS)) {
 						transport = ListeningPoint.TLS;
 					} else {
