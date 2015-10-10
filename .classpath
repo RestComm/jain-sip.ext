@@ -4,11 +4,13 @@
 	<classpathentry excluding="**/*.java" kind="src" output="target/test-classes" path="src/test/resources"/>
 	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
 	<classpathentry kind="var" path="M2_REPO/javax/sip/jain-sip-api/1.2.0/jain-sip-api-1.2.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/javax/sip/jain-sip-ri/7.0.3.190/jain-sip-ri-7.0.3.190.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
 	<classpathentry kind="var" path="M2_REPO/dnsjava/dnsjava/2.1.7/dnsjava-2.1.7.jar"/>
 	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/mockito/mockito-all/1.8.5/mockito-all-1.8.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/commons-congestion"/>
+	<classpathentry kind="var" path="M2_REPO/javolution/javolution/5.5.1/javolution-5.5.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jain-sip"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

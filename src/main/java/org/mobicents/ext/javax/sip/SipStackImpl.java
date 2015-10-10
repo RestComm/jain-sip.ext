@@ -27,6 +27,7 @@ import gov.nist.javax.sip.SipProviderImpl;
 import gov.nist.javax.sip.message.SIPRequest;
 import gov.nist.javax.sip.stack.MessageChannel;
 import gov.nist.javax.sip.stack.SIPClientTransaction;
+import gov.nist.javax.sip.stack.SIPMessageValve;
 import gov.nist.javax.sip.stack.SIPServerTransaction;
 
 import java.util.Properties;
@@ -216,5 +217,10 @@ public class SipStackImpl extends gov.nist.javax.sip.SipStackImpl implements Sip
 	 */
 	public void removeSipProvider(SipProviderImpl sipProvider) {
 		sipProviders.remove(sipProvider);
+	}
+	
+	@Override
+	public SIPMessageValve getSipMessageValve() {
+		return sipMessageValve;
 	}
 }

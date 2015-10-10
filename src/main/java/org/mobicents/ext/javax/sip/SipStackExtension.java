@@ -22,7 +22,13 @@
 
 package org.mobicents.ext.javax.sip;
 
+import java.util.Properties;
+
+import javax.sip.SipStack;
+
 import gov.nist.javax.sip.SipProviderImpl;
+import gov.nist.javax.sip.SipStackExt;
+import gov.nist.javax.sip.stack.SIPMessageValve;
 
 /**
  * Extensions that don't make it in JAIN SIP as they are too specific to Mobicents use cases.
@@ -32,14 +38,21 @@ import gov.nist.javax.sip.SipProviderImpl;
  * @author jean.deruelle@gmail.com
  *
  */
-public interface SipStackExtension {
+public interface SipStackExtension extends SipStackExt, SipStack {
 	public static final String TRANSACTION_FACTORY_CLASS_NAME = "org.mobicents.ext.java.sip.TRANSACTION_FACTORY";
 	public static final String SIP_PROVIDER_FACTORY_CLASS_NAME = "org.mobicents.ext.java.sip.SIP_PROVIDER_FACTORY";
 	public static final String SEND_TRYING_RIGHT_AWAY = "org.mobicents.ext.java.sip.SEND_TRYING_RIGHT_AWAY";
+	
+	public Properties getConfigurationProperties();
+	public SIPMessageValve getSipMessageValve();
 	
 	public void setSendTryingRightAway(boolean sendTryingRightAway);
 	public boolean isSendTryingRightAway();
 	
 	public void addSipProvider(SipProviderImpl sipProvider);
 	public void removeSipProvider(SipProviderImpl sipProvider);
+	
+	public int getNumberOfClientTransactions();
+	public int getNumberOfServerTransactions();
+	public int getNumberOfDialogs();
 }

@@ -15,6 +15,11 @@
 	<description>Mobicents JAIN SIP Extensions</description>
 	<url>http://code.google.com/p/jain-sip.ext</url>
 
+	<properties>
+		<junit.version>4.8.2</junit.version>		
+		<commons.congestion>7.0.3.8</commons.congestion>		
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.sip</groupId>
@@ -31,6 +36,16 @@
 			<artifactId>dnsjava</artifactId>
 			<version>2.1.7</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.commons</groupId>
+			<artifactId>commons-congestion</artifactId>
+			<version>${commons.congestion}</version>
+		</dependency>	
+		<dependency>
+			<groupId>javolution</groupId>
+			<artifactId>javolution</artifactId>
+			<version>${javolution.version}</version>			
 		</dependency>
 		<!-- logging dependency -->
 		<dependency>
