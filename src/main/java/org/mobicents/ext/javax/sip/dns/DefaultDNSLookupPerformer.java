@@ -100,24 +100,27 @@ public class DefaultDNSLookupPerformer implements DNSLookupPerformer {
 		if(naptrRecords != null) {
 			for (Record record : naptrRecords) {
 				NAPTRRecord naptrRecord = (NAPTRRecord) record;
+				// https://github.com/Mobicents/jain-sip.ext/issues/1
+				// Compare with uppercase to achieve case-insensitive match
+				String service = naptrRecord.getService().toUpperCase();
 				if(isSecure) {
 					// First, a client resolving a SIPS URI MUST discard any services that
 					// do not contain "SIPS" as the protocol in the service field.
-					if(naptrRecord.getService().startsWith(SERVICE_SIPS)) {
+					if(service.startsWith(SERVICE_SIPS)) {
 						records.add(naptrRecord);
 					}
 				} else {	
 					// The converse is not true, however.
-					if(!naptrRecord.getService().startsWith(SERVICE_SIPS) || 
-							(naptrRecord.getService().startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
+					if(!service.startsWith(SERVICE_SIPS) || 
+							(service.startsWith(SERVICE_SIPS) && supportedTransports.contains(ListeningPoint.TLS))) {
 						//A client resolving a SIP URI SHOULD retain records with "SIPS" as the protocol, if the client supports TLS
-						if((naptrRecord.getService().contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
-								naptrRecord.getService().contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
+						if((service.contains(SERVICE_D2U) && supportedTransports.contains(ListeningPoint.UDP)) ||
+								service.contains(SERVICE_D2T) && (supportedTransports.contains(ListeningPoint.TCP) || supportedTransports.contains(ListeningPoint.TLS))) {
 							// Second, a client MUST discard any service fields that identify
 							// a resolution service whose value is not "D2X", for values of X that
 							// indicate transport protocols supported by the client.
 							records.add(naptrRecord);
-						} else if(naptrRecord.getService().equals(SERVICE_E2U)) {
+						} else if(service.equals(SERVICE_E2U)) {
 							// ENUM support
 							records.add(naptrRecord);
 						}
