@@ -11,6 +11,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/commons-congestion"/>
 	<classpathentry kind="var" path="M2_REPO/javolution/javolution/5.5.1/javolution-5.5.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/io/netty/netty-all/4.0.33.Final/netty-all-4.0.33.Final.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jain-sip"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
