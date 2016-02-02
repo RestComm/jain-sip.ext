@@ -399,7 +399,7 @@ public class DNSServerLocatorTest {
 	}
 	
 	@Test
-	//Issue http://code.google.com/p/mobicents/issues/detail?id=3143
+	//Issue http://code.google.com/p/restcomm/issues/detail?id=3143
 	public void testNAPTRPrefComparator() throws TextParseException {
 		List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
 		// mocking the name because localhost is not absolute and localhost. cannot be resolved 

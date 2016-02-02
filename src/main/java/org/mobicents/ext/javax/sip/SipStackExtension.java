@@ -31,7 +31,7 @@ import gov.nist.javax.sip.SipStackExt;
 import gov.nist.javax.sip.stack.SIPMessageValve;
 
 /**
- * Extensions that don't make it in JAIN SIP as they are too specific to Mobicents use cases.
+ * Extensions that don't make it in JAIN SIP as they are too specific to Restcomm use cases.
  * The properties specified here allow a stack to provide its own transaction factory to create SIPServerTransaction and SIPClientTransaction extension objects
  * and allow to provide its on sip provider factory to allow creating SipProviderImpl extensions
  * 

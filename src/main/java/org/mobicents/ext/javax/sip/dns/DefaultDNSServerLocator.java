@@ -132,7 +132,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 					logger.debug("regexp " + regexp + " found for phone number " + phoneNumber);
 				}
 
-				// http://code.google.com/p/mobicents/issues/detail?id=2774 : Fix For allowing REGEX 
+				// http://code.google.com/p/restcomm/issues/detail?id=2774 : Fix For allowing REGEX 
 				// Contribution from Oifa Yulian from Web Ukraine
 				if(regexp.startsWith("!"))
 					regexp=regexp.substring(1);
@@ -334,7 +334,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 								logger.debug("no NPATR records found, SRV query for supported transport " + serviceIdentifier
 										+ supportedTransport + "." + host + " successful for " + sipURI);
 							}
-							//Issue 3140 http://code.google.com/p/mobicents/issues/detail?id=3140
+							//Issue 3140 http://code.google.com/p/restcomm/issues/detail?id=3140
 							//We shouldn't return fast with the first transport found
 							//a check should be done in the case of SIPS URI and TLS transport is supported
 							resolvedTransports.put(supportedTransport.toUpperCase(), lookupRecord);
@@ -529,7 +529,7 @@ public class DefaultDNSServerLocator implements DNSServerLocator {
 		if(sipURI.isSecure()) {
 			transport = ListeningPoint.TLS;
 		} else {
-			// Issue http://code.google.com/p/mobicents/issues/detail?id=2836: if no UDP connectors are present
+			// Issue http://code.google.com/p/restcomm/issues/detail?id=2836: if no UDP connectors are present
 			// take the TCP one
 			if (supportedTransports.contains(ListeningPoint.UDP))
 				transport = ListeningPoint.UDP;

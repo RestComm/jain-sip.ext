@@ -36,7 +36,7 @@ public class NAPTRRecordComparator implements Comparator<NAPTRRecord> {
 		int o1Order = o1.getOrder();
 		int o2Order = o2.getOrder();
 		
-		//Issue http://code.google.com/p/mobicents/issues/detail?id=3143
+		//Issue http://code.google.com/p/restcomm/issues/detail?id=3143
 		//Check record preference
 		int o1preference = o1.getPreference();
 		int o2preference = o2.getPreference();
