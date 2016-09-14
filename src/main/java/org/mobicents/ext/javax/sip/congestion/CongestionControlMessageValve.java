@@ -21,6 +21,7 @@ package org.mobicents.ext.javax.sip.congestion;
 
 import gov.nist.core.CommonLogger;
 import gov.nist.core.StackLogger;
+import gov.nist.javax.sip.header.HeaderExt;
 import gov.nist.javax.sip.message.SIPRequest;
 import gov.nist.javax.sip.message.SIPResponse;
 import gov.nist.javax.sip.stack.MessageChannel;
@@ -126,16 +127,19 @@ public class CongestionControlMessageValve implements SIPMessageValve, Congestio
         //        To: "sipvicious" <sip:100@1.1.1.1>
         //        From: "sipvicious" <sip:100@1.1.1.1>;tag=3336353363346565313363340133313330323436343236
         //        From: "1" <sip:1@87.202.36.237>;tag=3e7a78de
-        Header userAgentHeader = request.getHeader("User-Agent");
-        Header toHeader = request.getHeader("To");
-        Header fromHeader = request.getHeader("From");
+        HeaderExt userAgentHeader = (HeaderExt) request.getHeader("User-Agent");
+        HeaderExt toHeader = (HeaderExt) request.getHeader("To");
+        HeaderExt fromHeader = (HeaderExt) request.getHeader("From");
 
         for (String blockedValue: blockedList){
-            if(userAgentHeader != null && userAgentHeader.toString().toLowerCase().contains(blockedValue.toLowerCase())) {
+        	if(logger.isLoggingEnabled(CommonLogger.TRACE_TRACE) && userAgentHeader != null) {
+    			logger.logTrace("Checking if User-Agent " + userAgentHeader.getValue().toLowerCase().trim() + " contains blocked value " + blockedValue);
+    		}
+            if(userAgentHeader != null && userAgentHeader.getValue().toLowerCase().trim().contains(blockedValue)) {
                 return false;
-            } else if (toHeader != null && toHeader.toString().toLowerCase().contains(blockedValue.toLowerCase())) {
+            } else if (toHeader != null && toHeader.getValue().toLowerCase().trim().contains(blockedValue)) {
                 return false;
-            } else if (fromHeader != null && fromHeader.toString().toLowerCase().contains(blockedValue.toLowerCase())) {
+            } else if (fromHeader != null && fromHeader.getValue().toLowerCase().trim().contains(blockedValue)) {
                 return false;
             }
         }
@@ -165,11 +169,27 @@ public class CongestionControlMessageValve implements SIPMessageValve, Congestio
 
 	public void init(SipStack stack) {
 		sipStack = (SipStackExtension) stack;
-		logger.logInfo("Initializing congestion control valve");
+		if(logger.isLoggingEnabled(CommonLogger.TRACE_INFO)) {
+			logger.logInfo("Initializing congestion control valve");
+		}
 		String blockedValues = sipStack.getConfigurationProperties().getProperty("org.mobicents.ext.javax.sip.congestion.SIP_SCANNERS", "sipvicious,sipcli,friendly-scanner");
-        blockedList = new ArrayList<String>(Arrays.asList(blockedValues.split(",")));
+		if(logger.isLoggingEnabled(CommonLogger.TRACE_INFO)) {
+			logger.logInfo("Blocked value " + blockedValues);
+		}
+		String[] blockedScanners = blockedValues.split(",");
+		blockedList = new ArrayList<String>();
+		for(String blockedScanner : blockedScanners) {
+			if(logger.isLoggingEnabled(CommonLogger.TRACE_INFO)) {
+				logger.logInfo("Adding Blocked scanner to the list " + blockedScanner);
+			}
+			blockedList.add(blockedScanner.toLowerCase().trim());
+		}
+        
 		String congestionControlMonitoringIntervalString = sipStack.getConfigurationProperties().getProperty("org.mobicents.ext.javax.sip.congestion.CONGESTION_CONTROL_MONITOR_INTERVAL", "30000");
 		congestionControlMonitoringInterval = new Integer(congestionControlMonitoringIntervalString);
+		if(logger.isLoggingEnabled(CommonLogger.TRACE_INFO)) {
+			logger.logInfo("org.mobicents.ext.javax.sip.congestion.CONGESTION_CONTROL_MONITOR_INTERVAL " + congestionControlMonitoringInterval);
+		}
 		if(congestionControlTimerFuture == null && congestionControlMonitoringInterval > 0) { 					
 			String dropResponseStatusString = sipStack.getConfigurationProperties().getProperty("org.mobicents.ext.javax.sip.congestion.DROP_RESPONSE_STATUS", "503");
 			dropResponseStatus = new Integer(dropResponseStatusString);
