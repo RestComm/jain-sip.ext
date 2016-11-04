@@ -626,7 +626,7 @@ public class CongestionControlMessageValveTest extends TestCase {
 			}	        
             Thread.sleep(1000);        
 	        assertTrue("We expected 503", this.shootist.got503);
-	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 
 	        Collection<Dialog> dialogs = ((SipStackExtension)this.shootme.sipStack).getDialogs();
 	        Iterator<Dialog> dialogIterator = dialogs.iterator();
@@ -637,10 +637,10 @@ public class CongestionControlMessageValveTest extends TestCase {
 	        // wait for the linger timer to collect the dialogs
 	        Thread.sleep(10000);
 	        this.shootist.got503 =false;
-	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfDialogs(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfDialogs(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.sendRequest();
 	        assertFalse("We expected 503", this.shootist.got503);
-	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.got503 =false;
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -656,14 +656,14 @@ public class CongestionControlMessageValveTest extends TestCase {
 			}	        
             Thread.sleep(1000);        
 	        assertTrue("We expected 503", this.shootist.got503);
-	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        // wait for the linger timer to collect the txs
 	        Thread.sleep(10000);
 	        this.shootist.got503 =false;
-	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.sendRequest();
 	        assertFalse("We expected 503", this.shootist.got503);
-	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.got503 =false;
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -679,14 +679,14 @@ public class CongestionControlMessageValveTest extends TestCase {
 			}	        
             Thread.sleep(1000);        
 	        assertTrue("We expected 503", this.shootist.got503);
-	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        // wait for the linger timer to collect the txs
 	        Thread.sleep(10000);
 	        this.shootist.got503 =false;
-	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.sendRequest();
 	        assertFalse("We expected 503", this.shootist.got503);
-	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.got503 =false;
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -701,15 +701,15 @@ public class CongestionControlMessageValveTest extends TestCase {
 		        this.shootist.sendRequest();	
 			}	        
             Thread.sleep(100);
-            assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+            assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        assertTrue("We expected 503", this.shootist.got503);	        
 	        // wait for the linger timer to collect the txs
 	        Thread.sleep(10000);
 	        this.shootist.got503 =false;
-	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.sendRequest();
 	        assertFalse("We expected 503", this.shootist.got503);
-	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        this.shootist.got503 =false;
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -724,15 +724,40 @@ public class CongestionControlMessageValveTest extends TestCase {
 		        this.shootist.sendRequest("friendly-scanner");	
 			}	        
             Thread.sleep(100);
-//            assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+//            assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 	        assertTrue("We expected no response " + shootist.lastResponseCode, this.shootist.lastResponseCode == -1);	        
 	        // wait for the linger timer to collect the txs
 //	        Thread.sleep(10000);
 //	        this.shootist.got503 =false;
-//	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+//	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 //	        this.shootist.sendRequest();
 //	        assertFalse("We expected 503", this.shootist.got503);
-//	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValve()).isRejectMessages());
+//	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
+//	        this.shootist.got503 =false;
+        } catch (Exception ex) {
+        	ex.printStackTrace();
+        }
+    }
+    
+    public void testDropMethod() {
+        this.shootme.init(Policy.DropMethod, 0.01, 0.005);
+        try {
+	        this.shootist.init();
+//	        for (int i = 0; i < ; i++) {
+	        	Map<String, String> headers =  new HashMap<String, String>();
+	        	headers.put("Subscription-State", "active");
+		        this.shootist.sendRequest(Request.SUBSCRIBE, null, headers);	
+//			}	        
+            Thread.sleep(1000);
+//            assertTrue("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
+	        assertTrue("We expected 405 response " + shootist.lastResponseCode, this.shootist.lastResponseCode == 405);	        
+	        // wait for the linger timer to collect the txs
+//	        Thread.sleep(10000);
+//	        this.shootist.got503 =false;
+//	        assertFalse("We expected the valve to stop reject messages " + ((SipStackExtension)this.shootme.sipStack).getNumberOfServerTransactions(), ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
+//	        this.shootist.sendRequest();
+//	        assertFalse("We expected 503", this.shootist.got503);
+//	        assertFalse("We expected the valve to reject messages", ((CongestionControlMessageValve)((SipStackExtension)this.shootme.sipStack).getSipMessageValves().get(0)).isRejectMessages());
 //	        this.shootist.got503 =false;
         } catch (Exception ex) {
         	ex.printStackTrace();

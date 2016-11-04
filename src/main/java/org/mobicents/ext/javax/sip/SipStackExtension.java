@@ -22,13 +22,14 @@
 
 package org.mobicents.ext.javax.sip;
 
-import java.util.Properties;
-
-import javax.sip.SipStack;
-
 import gov.nist.javax.sip.SipProviderImpl;
 import gov.nist.javax.sip.SipStackExt;
 import gov.nist.javax.sip.stack.SIPMessageValve;
+
+import java.util.List;
+import java.util.Properties;
+
+import javax.sip.SipStack;
 
 /**
  * Extensions that don't make it in JAIN SIP as they are too specific to Restcomm use cases.
@@ -44,7 +45,7 @@ public interface SipStackExtension extends SipStackExt, SipStack {
 	public static final String SEND_TRYING_RIGHT_AWAY = "org.mobicents.ext.java.sip.SEND_TRYING_RIGHT_AWAY";
 	
 	public Properties getConfigurationProperties();
-	public SIPMessageValve getSipMessageValve();
+	public List<SIPMessageValve> getSipMessageValves();
 	
 	public void setSendTryingRightAway(boolean sendTryingRightAway);
 	public boolean isSendTryingRightAway();

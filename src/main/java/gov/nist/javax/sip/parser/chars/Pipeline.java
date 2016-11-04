@@ -77,7 +77,13 @@ public class Pipeline extends InputStream {
         public void cleanUpBeforeCancel() {
         	this.isCancelled = true;
         	super.cleanUpBeforeCancel();
-        }             
+        }
+
+		@Override
+		public Object getThreadHash() {
+			// TODO Auto-generated method stub
+			return null;
+		}             
 
     }
 

@@ -30,6 +30,7 @@ import gov.nist.javax.sip.stack.SIPClientTransaction;
 import gov.nist.javax.sip.stack.SIPMessageValve;
 import gov.nist.javax.sip.stack.SIPServerTransaction;
 
+import java.util.List;
 import java.util.Properties;
 
 import javax.management.MBeanServer;
@@ -37,6 +38,7 @@ import javax.management.MBeanServerFactory;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
+import javax.sip.ListeningPoint;
 import javax.sip.PeerUnavailableException;
 import javax.sip.ProviderDoesNotExistException;
 import javax.sip.SipException;
@@ -220,7 +222,7 @@ public class SipStackImpl extends gov.nist.javax.sip.SipStackImpl implements Sip
 	}
 	
 	@Override
-	public SIPMessageValve getSipMessageValve() {
-		return sipMessageValve;
+	public List<SIPMessageValve> getSipMessageValves() {
+		return sipMessageValves;
 	}
 }

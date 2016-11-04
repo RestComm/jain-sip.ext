@@ -18,6 +18,7 @@
 	<properties>
 		<junit.version>4.8.2</junit.version>		
 		<commons.congestion>1.0.134</commons.congestion>		
+		<jain-sip-ri.version>1.2.318</jain-sip-ri.version>		
 	</properties>
 
 	<dependencies>
@@ -29,6 +30,7 @@
 		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
+			<version>${jain-sip-ri.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
