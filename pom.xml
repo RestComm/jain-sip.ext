@@ -18,7 +18,7 @@
 	<properties>
 		<junit.version>4.8.2</junit.version>		
 		<commons.congestion>1.0.134</commons.congestion>		
-		<jain-sip-ri.version>1.2.318</jain-sip-ri.version>		
+		<jain-sip-ri.version>1.2.322</jain-sip-ri.version>		
 	</properties>
 
 	<dependencies>
