@@ -64,7 +64,7 @@ public class DNSAwareRouter extends DefaultRouter {
         if (requestLine == null) {
             return getOutboundProxy();
         }
-        javax.sip.address.URI requestURI = requestLine.getUri();
+        URI requestURI = requestLine.getUri();
         if (requestURI == null)
             throw new IllegalArgumentException("Bad message: Null requestURI");
 
