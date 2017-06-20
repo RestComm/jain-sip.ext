@@ -16,7 +16,7 @@
 	<artifactId>android-jain-sip-ext</artifactId>
 	<version>1.3.0-SNAPSHOT</version>
 	
-	<name>Restcomm JAIN SIP Ext</name>
+	<name>Restcomm Android JAIN SIP Ext</name>
 	<description>Restcomm JAIN SIP Extensions</description>
 	<url>https://github.com/RestComm/jain-sip.ext</url>
 	
