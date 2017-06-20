@@ -113,7 +113,7 @@
 		              <artifactItems>
 		                <artifactItem>
 		                  <groupId>org.mobicents.javax.sip</groupId>
-						  <artifactId>mobicents-jain-sip-ext</artifactId>
+						  <artifactId>jain-sip-ext</artifactId>
 						  <version>${project.version}</version>
 		                  <classifier>sources</classifier>
 		                  <overWrite>true</overWrite>
