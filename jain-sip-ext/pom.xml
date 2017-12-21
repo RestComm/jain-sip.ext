@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>org.mobicents.javax.sip</groupId>
 		<artifactId>restcomm-jain-sip-ext</artifactId>
-		<version>1.3.0-SNAPSHOT</version>
+		<version>1.4.0-103</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>org.mobicents.javax.sip</groupId>
 	<artifactId>jain-sip-ext</artifactId>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.4.0-103</version>
 	
 	<packaging>jar</packaging>
 
