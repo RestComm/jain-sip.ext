@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.mobicents.javax.sip</groupId>
 		<artifactId>restcomm-jain-sip-ext-bootstrap</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
+		<version>1.4.0-127</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	
